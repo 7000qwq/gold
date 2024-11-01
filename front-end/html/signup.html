@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        async function handleSignUp(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert('Fill in all * fields');
+                return;
+            }
+
+            try {
+                let response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, phoneNumber, email, password })
+                });
+                
+                if (response.ok) {
+                    alert('Sign up successful!');
+                    // Redirect to login page or any other page
+                    window.location.href = 'login.html';
+                } else {
+                    alert('Sign up failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during sign up:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+
+        function handleCancel() {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f3ef;
+            color: #333;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #336699;
+            color: white;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .signup-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #d9e9f3;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .signup-container label {
+            font-weight: bold;
+            color: #336699;
+        }
+        .signup-container input[type="text"],
+        .signup-container input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .signup-container .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .signup-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .signup-container .save-button {
+            background-color: #f0c987;
+        }
+        .signup-container .save-button:hover {
+            background-color: #e6b77e;
+        }
+        .signup-container .cancel-button {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .signup-container .cancel-button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="home.html">HOME</a></li>
+                <li><a href="history.html">HISTORY</a></li>
+                <li><a href="strategy.html">STRATEGY</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="signup-container">
+            <form onsubmit="handleSignUp(event)">
+                <label for="username">Username</label><br>
+                <input type="text" id="username" name="username"><br>
+                <label for="phoneNumber">Phone number</label><br>
+                <input type="text" id="phoneNumber" name="phoneNumber"><br>
+                <label for="email">Email *</label><br>
+                <input type="text" id="email" name="email" required><br>
+                <label for="password">Password *</label><br>
+                <input type="password" id="password" name="password" required><br>
+                <div class="button-group">
+                    <button type="button" class="cancel-button" onclick="handleCancel()">Cancel</button>
+                    <button type="submit" class="save-button">Save</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

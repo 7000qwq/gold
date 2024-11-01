@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        async function loadStrategyData() {
+            try {
+                let response = await fetch('/api/login-status');
+                let result = await response.json();
+                const loginDiv = document.getElementById('loginStatus');
+
+                if (result.loggedIn) {
+                    loginDiv.innerHTML = `<a href="signup.html">${result.username}</a>`;
+                } else {
+                    loginDiv.innerHTML = `<a href="login.html">Log in</a>`;
+                }
+
+                response = await fetch('/api/strategy');
+                result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('longTerm').value = result.longTermHolding || '';
+                    document.getElementById('shortTerm').value = result.shortTermHolding || '';
+                    document.getElementById('lowPrice').value = result.lowPriceAlert || '';
+                    document.getElementById('highPrice').value = result.highPriceAlert || '';
+                    document.getElementById('emailReminder').checked = result.remindWithEmail || false;
+                }
+            } catch (error) {
+                console.error('Error loading strategy data:', error);
+            }
+        }
+
+        async function handleSave(event) {
+            event.preventDefault();
+
+            try {
+                let loginResponse = await fetch('/api/login-status');
+                let loginResult = await loginResponse.json();
+                if (!loginResult.loggedIn) {
+                    alert('You need to log in to save your strategy.');
+                    return;
+                }
+
+                const longTermHolding = document.getElementById('longTerm').value;
+                const shortTermHolding = document.getElementById('shortTerm').value;
+                const lowPriceAlert = document.getElementById('lowPrice').value;
+                const highPriceAlert = document.getElementById('highPrice').value;
+                const remindWithEmail = document.getElementById('emailReminder').checked;
+
+                let response = await fetch('/api/strategy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ longTermHolding, shortTermHolding, lowPriceAlert, highPriceAlert, remindWithEmail })
+                });
+                
+                if (response.ok) {
+                    alert('Strategy saved successfully!');
+                    window.location.href = 'home.html';
+                } else {
+                    alert('Failed to save strategy. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error saving strategy data:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+
+        function handleCancel() {
+            window.location.href = 'home.html';
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f3ef;
+            color: #333;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #336699;
+            color: white;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        nav ul li a.active {
+            background-color: #294a66;
+        }
+        .login a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        .strategy-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #d9e9f3;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .strategy-container label {
+            font-weight: bold;
+            color: #336699;
+        }
+        .strategy-container input[type="text"],
+        .strategy-container input[type="number"] {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: calc(100% - 60px);
+            display: inline-block;
+        }
+        .currency-symbol {
+            display: inline-block;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        .strategy-container .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .strategy-container .checkbox-container input {
+            margin-right: 10px;
+        }
+        .strategy-container .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .strategy-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .strategy-container .save-button {
+            background-color: #f0c987;
+        }
+        .strategy-container .save-button:hover {
+            background-color: #e6b77e;
+        }
+        .strategy-container .cancel-button {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .strategy-container .cancel-button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body onload="loadStrategyData()">
+    <header>
+        <nav>
+            <ul>
+                <li><a href="home.html">HOME</a></li>
+                <li><a href="history.html">HISTORY</a></li>
+                <li><a href="strategy.html" class="active">STRATEGY</a></li>
+            </ul>
+        </nav>
+        <div class="login" id="loginStatus"><a href="login.html">Log in</a></div>
+    </header>
+    <main>
+        <div class="strategy-container">
+            <form onsubmit="handleSave(event)">
+                <label for="longTerm">Long term holding amount</label><br>
+                <input type="text" id="longTerm" name="longTerm"><span class="currency-symbol"> &yen;</span><br>
+                <label for="shortTerm">Short term holding amount</label><br>
+                <input type="text" id="shortTerm" name="shortTerm"><span class="currency-symbol"> &yen;</span><br>
+                <label for="lowPrice">Low price alert</label><br>
+                <input type="number" id="lowPrice" name="lowPrice"><span class="currency-symbol"> &yen;</span><br>
+                <label for="highPrice">High price alert</label><br>
+                <input type="number" id="highPrice" name="highPrice"><span class="currency-symbol"> &yen;</span><br>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="emailReminder" name="emailReminder">
+                    <label for="emailReminder">Remind with email</label>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="cancel-button" onclick="handleCancel()">Cancel</button>
+                    <button type="submit" class="save-button">Save</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

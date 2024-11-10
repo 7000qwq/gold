@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f3ef;
+            color: #333;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #336699;
+            color: white;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        nav ul li a.active {
+            background-color: #294a66;
+        }
+        .login {
+            position: relative;
+        }
+        .login a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .strategy-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #d9e9f3;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .strategy-container label {
+            font-weight: bold;
+            color: #336699;
+        }
+        .strategy-container input[type="text"],
+        .strategy-container input[type="number"] {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: calc(100% - 60px);
+            display: inline-block;
+        }
+        .currency-symbol {
+            display: inline-block;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        .strategy-container .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .strategy-container .checkbox-container input {
+            margin-right: 10px;
+        }
+        .strategy-container .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .strategy-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .strategy-container .save-button {
+            background-color: #f0c987;
+        }
+        .strategy-container .save-button:hover {
+            background-color: #e6b77e;
+        }
+        .strategy-container .cancel-button {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .strategy-container .cancel-button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body onload="loadStrategyData(); checkLoginStatus()">
+<header>
+    <nav>
+        <ul>
+            <li><a href="javascript:void(0);" onclick="navigateTo('home.html')">HOME</a></li>
+            <li><a href="javascript:void(0);" onclick="navigateTo('history.html')">HISTORY</a></li>
+            <li><a href="strategy.html" class="active">STRATEGY</a></li>
+
+        </ul>
+    </nav>
+    <div class="login" id="loginStatus"><a href="login.html">Log in</a></div>
+</header>
+<main>
+    <div class="strategy-container">
+        <form onsubmit="handleSave(event)">
+            <label for="note">Note</label><br>
+            <input type="text" id="note" name="note"><br>
+            <label for="lowPrice">Low price alert</label><br>
+            <input type="number" id="lowPrice" name="lowPrice"><span class="currency-symbol"> &yen;</span><br>
+            <label for="highPrice">High price alert</label><br>
+            <input type="number" id="highPrice" name="highPrice"><span class="currency-symbol"> &yen;</span><br>
+            <div class="checkbox-container">
+                <input type="checkbox" id="emailReminder" name="emailReminder">
+                <label for="emailReminder">Remind with email</label>
+            </div>
+            <div class="button-group">
+                <button type="button" class="cancel-button" onclick="handleCancel()">Cancel</button>
+                <button type="submit" class="save-button">Save</button>
+            </div>
+        </form>
+    </div>
+</main>
+<script>
+    function showAlert(message) {
+            const alertBox = document.createElement('div');
+            alertBox.className = 'alert-box';
+            alertBox.innerText = message;
+            document.body.appendChild(alertBox);
+
+            setTimeout(() => {
+                alertBox.remove();
+            }, 3000);
+        }
+
+    // Add the navigateTo function to check login status before redirecting
+    function navigateTo(page) {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+            // Redirect to login if the user is not logged in
+            window.location.href = 'login.html';
+        } else {
+            // Proceed to the requested page if logged in
+            window.location.href = page;
+        }
+    }
+
+    async function loadStrategyData() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let response = await fetch('/user/strategy', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let result = await response.json();
+
+            if (result.code == 0) {
+                showAlert(result.msg);
+                return;
+            }
+
+            if (result.code == 1 && result.data) {
+                document.getElementById('note').value = result.data.note || '';
+                document.getElementById('lowPrice').value = result.data.lowPrice || '';
+                document.getElementById('highPrice').value = result.data.highPrice || '';
+                document.getElementById('emailReminder').checked = result.data.emailNotification === 1;
+            }
+        } catch (error) {
+            console.error('Error loading strategy data:', error);
+        }
+    }
+
+    async function handleSave(event) {
+        event.preventDefault();
+
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let loginResponse = await fetch('/user/name', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let loginResult = await loginResponse.json();
+            if (loginResult.code !== 1) {
+                alert('You need to log in to save your strategy.');
+                return;
+            }
+
+            const note = document.getElementById('note').value;
+            const lowPrice = document.getElementById('lowPrice').value;
+            const highPrice = document.getElementById('highPrice').value;
+            const emailNotification = document.getElementById('emailReminder').checked ? 1 : 0;
+
+            let response = await fetch('/user/strategy', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({ note, lowPrice, highPrice, emailNotification })
+            });
+
+            let res = await response.json();
+
+            if (res.code == 0) {
+                showAlert(res.msg);
+                return;
+            }
+
+            if (res.code == 1) {
+                alert('Strategy saved successfully!');
+                location.reload();
+            } else {
+                alert('Failed to save strategy. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error saving strategy data:', error);
+            alert('An error occurred. Please try again later.');
+        }
+    }
+
+    function handleCancel() {
+        window.location.href = 'home.html';
+    }
+
+    // Function to check login status
+    async function checkLoginStatus() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let response = await fetch('/user/name', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let result = await response.json();
+            const loginDiv = document.getElementById('loginStatus');
+
+            if (result.code == 1) {
+                loginDiv.innerHTML = `
+                    <div class="user-dropdown">
+                        <a href="#">${result.data}</a>
+                        <div class="dropdown-content">
+                            <a href="#" onclick="logout()">Logout</a>
+                            <a href="edituser.html">Edit</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+            }
+        } catch (error) {
+            console.error('Error checking login status:', error);
+            // Fallback to Log in button if the request fails
+            document.getElementById('loginStatus').innerHTML = '<a href="login.html">Log in</a>';
+        }
+    }
+
+    // Function to handle logout
+    async function logout() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            await fetch('/user/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'home.html';
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    }
+
+</script>
+</body>
+</html>

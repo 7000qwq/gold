@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f3ef;
+            color: #333;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #336699;
+            color: white;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        nav ul li a.active {
+            background-color: #294a66;
+        }
+        .login a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        .history-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #d9e9f3;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .history-container .filters {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .history-container .filters label {
+            font-weight: bold;
+            color: #336699;
+        }
+        .history-container .filters input,
+        .history-container .filters select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .history-container .filters button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #336699;
+            color: white;
+        }
+        .history-container .filters button.new-item {
+            background-color: #f0c987;
+        }
+        .history-container .filters button.new-item:hover {
+            background-color: #e6b77e;
+        }
+        .history-container .filters button:hover {
+            background-color: #294a66;
+        }
+        .history-container table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .history-container table th,
+        .history-container table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        .history-container .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #d9e9f3;
+            border-radius: 5px;
+        }
+        .history-container .pagination select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            text-align: center;
+            width: 200px;
+        }
+        .history-container .pagination input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            text-align: center;
+            width: 70px;
+        }
+        .history-container .pagination button {
+            background-color: #336699;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .history-container .pagination button:hover {
+            background-color: #294a66;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .datetime-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .datetime-input-wrapper input[type="datetime-local"] {
+            padding-right: 25px;
+        }
+        .clear-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            font-size: 16px;
+        }
+        .clear-icon:hover {
+            color: #333;
+        }
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .user-dropdown a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .user-dropdown .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .user-dropdown .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .user-dropdown .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body onload="checkLoginStatus();handleSearch()">
+<header>
+    <nav>
+        <ul>
+            <li><a href="javascript:void(0);" onclick="navigateTo('home.html')">HOME</a></li>
+            <li><a href="history.html" class="active">HISTORY</a></li>
+            <li><a href="javascript:void(0);" onclick="navigateTo('strategy.html')">STRATEGY</a></li>
+        </ul>
+    </nav>
+    <div class="login" id="loginStatus"><a href="login.html">Log in</a></div>
+</header>
+<main>
+    <div class="history-container">
+        <div class="filters">
+            <label for="type">Type:</label>
+            <select id="type">
+                <option value="">Select Type</option>
+                <option value="0">Buy</option>
+                <option value="1">Sell</option>
+            </select>
+
+            <div class="input-container">
+                <label for="dateFrom">Time:</label>
+                <div class="datetime-input-wrapper">
+                    <input type="datetime-local" id="dateFrom" name="dateFrom">
+                    <span class="clear-icon" onclick="clearDate('dateFrom')">&times;</span>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <label for="dateTo">to</label>
+                <div class="datetime-input-wrapper">
+                    <input type="datetime-local" id="dateTo" name="dateTo">
+                    <span class="clear-icon" onclick="clearDate('dateTo')">&times;</span>
+                </div>
+            </div>
+
+            <button onclick="handleSearch(event)">Search</button>
+            <button class="new-item" onclick="handleNewItem()">+ New item</button>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Buy/Sell</th>
+                <th>Traded Gold Price</th>
+                <th>Transaction amount</th>
+                <th>Transaction weight</th>
+                <th>Commission</th>
+                <th>Note</th>
+                <th>Operate</th>
+            </tr>
+            </thead>
+            <tbody id="transactionTableBody">
+            <!-- Rows will be dynamically added here -->
+            </tbody>
+        </table>
+        <div class="pagination">
+            <select id="pageSize" onchange="handlePageSizeChange()">
+                <option value="10">10 items/page</option>
+                <option value="50">50 items/page</option>
+                <option value="100">100 items/page</option>
+            </select>
+            <button onclick="handlePreviousPage()">&lt; Previous</button>
+            <span>Page <input type="text" id="currentPage" value="1" min="1" onchange="handlePageChange()"> of <span id="totalPages">1</span></span>
+            <button onclick="handleNextPage()">Next &gt;</button>
+        </div>
+    </div>
+</main>
+<script>
+    function showAlert(message) {
+        const alertBox = document.createElement('div');
+        alertBox.className = 'alert-box';
+        alertBox.innerText = message;
+        document.body.appendChild(alertBox);
+
+        setTimeout(() => {
+            alertBox.remove();
+        }, 3000);
+    }
+
+    function clearDate(inputId) {
+        document.getElementById(inputId).value = '';
+    }
+
+    async function checkLoginStatus() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let response = await fetch('/user/name', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let result = await response.json();
+            const loginDiv = document.getElementById('loginStatus');
+
+            if (result.code == 1) {
+                loginDiv.innerHTML = `
+                    <div class="user-dropdown">
+                        <a href="#">${result.data}</a>
+                        <div class="dropdown-content">
+                            <a href="#" onclick="logout()">Logout</a>
+                            <a href="edituser.html">Edit</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+            }
+        } catch (error) {
+            console.error('Error checking login status:', error);
+            document.getElementById('loginStatus').innerHTML = '<a href="login.html">Log in</a>';
+        }
+    }
+
+    async function logout() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            await fetch('/user/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'home.html';
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    }
+
+    function navigateTo(page) {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+            window.location.href = 'login.html';
+        } else {
+            window.location.href = page;
+        }
+    }
+
+    async function handleSearch(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let loginResponse = await fetch('/user/name', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let loginResult = await loginResponse.json();
+            if (loginResult.code !== 1) {
+                alert('You need to log in.');
+                return;
+            }
+
+            const type = document.getElementById('type').value;
+            let dateFrom = document.getElementById('dateFrom').value;
+            let dateTo = document.getElementById('dateTo').value;
+            const page = parseInt(document.getElementById('currentPage').value);
+            const pageSize = parseInt(document.getElementById('pageSize').value);
+
+            const queryParams = new URLSearchParams({
+                stringBeginTime: dateFrom,
+                stringEndTime: dateTo,
+                type: type,
+                page: page,
+                pageSize: pageSize
+            });
+
+            let response = await fetch(`/transaction/page?${queryParams.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+
+            let result = await response.json();
+
+            if (result.code == 0) {
+                showAlert(result.msg);
+                return;
+            }
+
+            if (result.code == 1) {
+                renderTable(result.data.records);
+                updatePagination(result.data.total, pageSize);
+            }
+        } catch (error) {
+            console.error('Error searching:', error);
+            alert('An error occurred. Please try again later.');
+        }
+    }
+
+    function updatePagination(totalRecords, pageSize) {
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        document.getElementById('totalPages').innerText = totalPages;
+    }
+
+    function handlePageSizeChange() {
+        document.getElementById('currentPage').value = 1;
+        handleSearch();
+    }
+
+    function handlePageChange() {
+        handleSearch();
+    }
+
+    function handlePreviousPage() {
+        const currentPageInput = document.getElementById('currentPage');
+        let currentPage = parseInt(currentPageInput.value);
+        if (currentPage > 1) {
+            currentPage--;
+            currentPageInput.value = currentPage;
+            handleSearch();
+        }
+    }
+
+    function handleNextPage() {
+        const currentPageInput = document.getElementById('currentPage');
+        let currentPage = parseInt(currentPageInput.value);
+        const totalPages = parseInt(document.getElementById('totalPages').innerText);
+        if (currentPage < totalPages) {
+            currentPage++;
+            currentPageInput.value = currentPage;
+            handleSearch();
+        }
+    }
+
+    function renderTable(records) {
+        const tableBody = document.getElementById('transactionTableBody');
+        tableBody.innerHTML = '';
+
+        records.forEach(record => {
+            const row = document.createElement('tr');
+
+            const dateCell = document.createElement('td');
+            const isoDateTime = `${record.time}:00`;
+            dateCell.textContent = new Date(isoDateTime).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            row.appendChild(dateCell);
+
+            const typeCell = document.createElement('td');
+            typeCell.textContent = record.type === 0 ? 'Buy' : 'Sell';
+            row.appendChild(typeCell);
+
+            const priceCell = document.createElement('td');
+            priceCell.textContent = parseFloat(record.goldPrice).toFixed(2);
+            row.appendChild(priceCell);
+
+            const amountCell = document.createElement('td');
+            amountCell.textContent = parseFloat(record.amount).toFixed(2);
+            row.appendChild(amountCell);
+
+            const weightCell = document.createElement('td');
+            weightCell.textContent = parseFloat(record.weight).toFixed(4);
+            row.appendChild(weightCell);
+
+            const commissionCell = document.createElement('td');
+            commissionCell.textContent = parseFloat(record.commission).toFixed(2);
+            row.appendChild(commissionCell);
+
+            const noteCell = document.createElement('td');
+            noteCell.textContent = record.note;
+            row.appendChild(noteCell);
+
+            const operateCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.style.border = 'none';
+            deleteButton.style.background = 'none';
+            deleteButton.style.color = 'red';
+            deleteButton.style.cursor = 'pointer';
+
+            deleteButton.onclick = async () => {
+                const confirmed = confirm(`Are you sure you want to delete the transaction on ${record.date}?`);
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+                    const id = record.id;
+                    const token = localStorage.getItem('jwtToken');
+
+                    let response = await fetch(`/transaction/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': token,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    let result = await response.json();
+
+                    if (result.code === 1) {
+                        row.remove();
+                        alert(`Transaction on ${record.date} deleted successfully.`);
+                    } else {
+                        alert(`Failed to delete transaction: ${result.msg}`);
+                    }
+                } catch (error) {
+                    console.error('Error deleting transaction:', error);
+                    alert('An error occurred while trying to delete the transaction. Please try again later.');
+                }
+            };
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.style.border = 'none';
+            editButton.style.background = 'none';
+            editButton.style.color = 'darkblue';
+            editButton.style.cursor = 'pointer';
+
+            editButton.onclick = () => {
+                const transactionId = record.id;
+                window.location.href = `edittransaction.html?id=${transactionId}`;
+            };
+
+            operateCell.appendChild(deleteButton);
+            operateCell.appendChild(editButton);
+            row.appendChild(operateCell);
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function handleNewItem() {
+        const token = localStorage.getItem('jwtToken');
+        let loginResponse = await fetch('/user/name', {
+            method: 'GET',
+            headers: {
+                'Authorization': token
+            }
+        });
+        let loginResult = await loginResponse.json();
+        if (loginResult.code !== 1) {
+            alert('You need to log in.');
+            return;
+        }
+
+        window.location.href = 'addtransaction.html';
+    }
+</script>
+</body>
+</html>

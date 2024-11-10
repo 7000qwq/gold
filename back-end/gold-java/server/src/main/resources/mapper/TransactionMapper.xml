@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="gold.mapper.TransactionMapper">
+
+
+    <select id="page" resultType="gold.entity.Transaction">
+        select * from history
+        <where>
+            <if test="type != null"> and type = #{type} </if>
+            <if test="beginTime != null"> and time > #{beginTime} </if>
+            <if test="endTime != null"> and #{endTime} > time </if>
+            <if test="userId != null"> and user_id = #{userId} </if>
+        </where>
+        order by time desc
+    </select>
+
+</mapper>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Transaction Item</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f3ef;
+            color: #333;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #336699;
+            color: white;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        nav ul li a.active {
+            background-color: #294a66;
+        }
+        .login a {
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        .edit-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #d9e9f3;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .edit-container label {
+            font-weight: bold;
+            color: #336699;
+        }
+        .edit-container input,
+        .edit-container select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .edit-container .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .edit-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .edit-container .save-button {
+            background-color: #f0c987;
+        }
+        .edit-container .save-button:hover {
+            background-color: #e6b77e;
+        }
+        .edit-container .cancel-button {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .edit-container .cancel-button:hover {
+            background-color: #f0f0f0;
+        }
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body onload="checkLoginStatus();loadTransactionData()">
+<header>
+    <nav>
+        <ul>
+            <li><a href="javascript:void(0);" onclick="navigateTo('home.html')">HOME</a></li>
+            <li><a href="history.html" class="active">HISTORY</a></li>
+            <li><a href="javascript:void(0);" onclick="navigateTo('strategy.html')">STRATEGY</a></li>
+        </ul>
+    </nav>
+    <div class="login" id="loginStatus"><a href="signup.html">Username</a></div>
+</header>
+<main>
+    <div class="edit-container">
+        <form onsubmit="handleSave(event)">
+            <label for="date">Time *</label><br>
+            <input type="datetime-local" id="dateTime" name="dateTime" style="width: calc(100% - 20px);"><br>
+            <label for="type">Type *</label><br>
+            <select id="type" name="type">
+                <option value="">Select Type</option>
+                <option value="0">Buy</option>
+                <option value="1">Sell</option>
+            </select><br>
+            <label for="goldPrice">Traded Gold Price *</label><br>
+            <input type="text" id="goldPrice" name="goldPrice" style="width: calc(100% - 20px);"><br>
+            <label for="transactionAmount">Transaction amount *</label><br>
+            <input type="text" id="transactionAmount" name="transactionAmount" style="width: calc(100% - 20px);"><br>
+            <label for="transactionWeight">Transaction weight *</label><br>
+            <input type="text" id="transactionWeight" name="transactionWeight" style="width: calc(100% - 20px);"><br>
+            <label for="commission">Commission</label><br>
+            <input type="text" id="commission" name="commission" style="width: calc(100% - 20px);"><br>
+            <label for="note">Note</label><br>
+            <input type="text" id="note" name="note" style="width: calc(100% - 20px);"><br>
+            <div class="button-group">
+                <button type="button" class="cancel-button" onclick="handleCancel()">Cancel</button>
+                <button type="submit" class="save-button">Save</button>
+            </div>
+        </form>
+    </div>
+</main>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    function showAlert(message) {
+        const alertBox = document.createElement('div');
+        alertBox.className = 'alert-box';
+        alertBox.innerText = message;
+        document.body.appendChild(alertBox);
+
+        setTimeout(() => {
+            alertBox.remove();
+        }, 3000);
+    }
+
+    // Function to check login status
+    async function checkLoginStatus() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let response = await fetch('/user/name', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let result = await response.json();
+            const loginDiv = document.getElementById('loginStatus');
+
+            if (result.code == 1) {
+                loginDiv.innerHTML = `
+                    <div class="user-dropdown">
+                        <a href="#">${result.data}</a>
+                        <div class="dropdown-content">
+                            <a href="#" onclick="logout()">Logout</a>
+                            <a href="edituser.html">Edit</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+            }
+        } catch (error) {
+            console.error('Error checking login status:', error);
+            // Fallback to Log in button if the request fails
+            document.getElementById('loginStatus').innerHTML = '<a href="login.html">Log in</a>';
+        }
+    }
+
+    // Function to handle logout
+    async function logout() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            await fetch('/user/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'home.html';
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    }
+
+    // Add the navigateTo function to check login status before redirecting
+    function navigateTo(page) {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+            // Redirect to login if the user is not logged in
+            window.location.href = 'login.html';
+        } else {
+            // Proceed to the requested page if logged in
+            window.location.href = page;
+        }
+    }
+
+    // 当任何一个输入发生变化时，自动计算并更新相关值
+    document.getElementById('goldPrice').addEventListener('input', calculateTransactionAmount);
+    document.getElementById('transactionWeight').addEventListener('input', calculateTransactionAmount);
+    document.getElementById('transactionAmount').addEventListener('input', calculateWeightOrPrice);
+
+    function calculateTransactionAmount() {
+        const goldPrice = parseFloat(document.getElementById('goldPrice').value);
+        const transactionWeight = parseFloat(document.getElementById('transactionWeight').value);
+
+        if (!isNaN(goldPrice) && !isNaN(transactionWeight)) {
+            const transactionAmount = goldPrice * transactionWeight;
+            document.getElementById('transactionAmount').value = transactionAmount.toFixed(2); // 保留2位小数
+            document.getElementById('goldPrice').value = goldPrice.toFixed(2); // 保留2位小数
+        }
+    }
+
+    function calculateWeightOrPrice() {
+        const transactionAmount = parseFloat(document.getElementById('transactionAmount').value);
+        const goldPrice = parseFloat(document.getElementById('goldPrice').value);
+
+        if (!isNaN(transactionAmount) && !isNaN(goldPrice) && goldPrice !== 0) {
+            const transactionWeight = transactionAmount / goldPrice;
+            document.getElementById('transactionWeight').value = transactionWeight.toFixed(4); // 保留4位小数
+        }
+    }
+
+    async function loadTransactionData() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let response = await fetch(`/transaction/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            let res = await response.json();
+
+            if (res.code == 0) {
+                showAlert(res.msg);
+                return;
+            }
+
+            if (res.code == 1) {
+                document.getElementById('dateTime').value = res.data.time.replace(' ', 'T');
+                document.getElementById('type').value = res.data.type;
+                document.getElementById('goldPrice').value = res.data.goldPrice;
+                document.getElementById('transactionAmount').value = res.data.amount;
+                document.getElementById('transactionWeight').value = (res.data.amount / res.data.goldPrice).toFixed(2);
+                document.getElementById('commission').value = res.data.commission;
+                document.getElementById('note').value = res.data.note;
+            } else {
+                alert('Failed to load transaction data. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error loading transaction data:', error);
+            alert('An error occurred while loading transaction data. Please try again later.');
+        }
+    }
+
+    async function handleSave(event) {
+        event.preventDefault();
+
+        try {
+            const token = localStorage.getItem('jwtToken');
+            let loginResponse = await fetch('/user/name', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+            let loginResult = await loginResponse.json();
+            if (loginResult.code !== 1) {
+                alert('You need to log in.');
+                return;
+            }
+
+            const dateTime = document.getElementById('dateTime').value + ':00';
+            const type = document.getElementById('type').value;
+            const goldPrice = parseFloat(document.getElementById('goldPrice').value);
+            const transactionAmount = parseFloat(document.getElementById('transactionAmount').value);
+            const transactionWeight = parseFloat(document.getElementById('transactionWeight').value);
+            const commission = parseFloat(document.getElementById('commission').value) || 0;
+            const note = document.getElementById('note').value;
+
+            if (!dateTime || type === "" || isNaN(goldPrice) || isNaN(transactionAmount) || isNaN(transactionWeight)) {
+                alert('Please fill in all required fields marked with *.');
+                return;
+            }
+
+            let response = await fetch('/transaction', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({
+                    id: id,
+                    time: dateTime,
+                    type: parseInt(type),
+                    goldPrice: goldPrice,
+                    amount: transactionAmount,
+                    weight: transactionWeight,
+                    commission: commission,
+                    note: note
+                })
+            });
+
+            let res = await response.json();
+
+            if (res.code == 0) {
+                showAlert(res.msg);
+                return;
+            }
+            if (res.code == 1) {
+                alert('Transaction saved successfully!');
+                window.location.href = 'history.html';
+            } else {
+                alert('Failed to save transaction. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error saving transaction:', error);
+            alert('An error occurred. Please try again later.');
+        }
+    }
+
+    function handleCancel() {
+        window.location.href = 'history.html';
+    }
+
+</script>
+</body>
+</html>

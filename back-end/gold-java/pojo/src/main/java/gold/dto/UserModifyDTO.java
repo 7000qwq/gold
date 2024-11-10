@@ -2,10 +2,10 @@ package gold.dto;
 
 import lombok.Data;
 
-@Data
-public class UserModifyDTO {
+import java.io.Serializable;
 
-    private Long id;
+@Data
+public class UserModifyDTO implements Serializable {
 
     private String email;
 

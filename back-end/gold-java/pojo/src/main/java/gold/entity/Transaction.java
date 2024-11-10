@@ -1,5 +1,6 @@
 package gold.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class Transaction implements Serializable {
 
     private Long userId;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime time;
 
     private Integer type;
@@ -29,6 +31,8 @@ public class Transaction implements Serializable {
     private BigDecimal goldPrice;
 
     private BigDecimal amount;
+
+    private BigDecimal weight;
 
     private BigDecimal commission;
 

@@ -18,9 +18,7 @@ public class Strategy implements Serializable {
 
     private Long userId;
 
-    private BigDecimal longAmount;
-
-    private BigDecimal shortAmount;
+    private String note;
 
     private BigDecimal highPrice;
 

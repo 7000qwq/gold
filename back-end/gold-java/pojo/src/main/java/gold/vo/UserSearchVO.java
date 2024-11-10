@@ -2,10 +2,10 @@ package gold.vo;
 
 import lombok.Data;
 
-@Data
-public class UserSearchVO {
+import java.io.Serializable;
 
-    private Long id;
+@Data
+public class UserSearchVO implements Serializable {
 
     private String email;
 

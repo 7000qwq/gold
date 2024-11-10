@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        function showAlert(message) {
+            const alertBox = document.createElement('div');
+            alertBox.className = 'alert-box';
+            alertBox.innerText = message;
+            document.body.appendChild(alertBox);
+
+            setTimeout(() => {
+                alertBox.remove();
+            }, 3000);
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const res = await response.json();
+
+                console.log('Response from backend:', res);
+
+                if (res.code == 0) {
+                    showAlert(res.msg);
+                    return;
+                }
+
+                if (res.code == 1) {
+                    localStorage.setItem('jwtToken', res.data.token);
+                    localStorage.setItem('loginMessage', 'Login successful!');
+                    window.location.href = 'home.html';
+                } else {
+                    showAlert('Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                showAlert('An error occurred. Please try again later.');
+            }
+        }
+
+        function handleSignUp() {
+            window.location.href = 'signup.html';
+        }
+
+        function handleForgotPassword() {
+            window.location.href = 'signup.html';
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f3ef;
+            color: #333;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #336699;
+            color: white;
+            width: 100%;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: #d9e9f3;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-container label {
+            font-weight: bold;
+            color: #336699;
+        }
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .login-container .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .login-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .login-container .login-button {
+            background-color: #f0c987;
+        }
+        .login-container .login-button:hover {
+            background-color: #e6b77e;
+        }
+        .login-container .other-button {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .login-container .other-button:hover {
+            background-color: #f0f0f0;
+        }
+        .alert-box {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f9f9f9; /* 更加柔和的浅灰色背景 */
+            color: #333; /* 深灰色文字 */
+            padding: 15px 25px;
+            border-radius: 8px; /* 增加圆角，使边角更加圆滑 */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* 柔和的阴影效果 */
+            font-size: 1.1em;
+            font-weight: 500; /* 字体稍微加粗，提升视觉效果 */
+            z-index: 1000;
+            max-width: 90%; /* 限制宽度，更适合移动端 */
+            text-align: center; /* 居中文字 */
+        }
+    </style>
+</head>
+<body>
+<header>
+    <nav>
+        <ul>
+            <li><a href="home.html">HOME</a></li>
+            <li><a href="history.html">HISTORY</a></li>
+            <li><a href="strategy.html">STRATEGY</a></li>
+        </ul>
+    </nav>
+</header>
+<main>
+    <div class="login-container">
+        <form onsubmit="handleLogin(event)">
+            <label for="email">Email</label><br>
+            <input type="text" id="email" name="email" required><br>
+            <label for="password">Password</label><br>
+            <input type="password" id="password" name="password" required><br>
+            <div class="button-group">
+                <button type="button" class="other-button" onclick="handleForgotPassword()">Forget password</button>
+                <button type="button" class="other-button" onclick="handleSignUp()">Sign up</button>
+                <button type="submit" class="login-button">Log in</button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @Data
 public class PositionVO implements Serializable {
 
-    private BigDecimal position;
+    private BigDecimal weight;
 
-    private BigDecimal income;
+    private BigDecimal money;
 }

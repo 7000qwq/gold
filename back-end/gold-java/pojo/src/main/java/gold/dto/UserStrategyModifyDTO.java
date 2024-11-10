@@ -2,16 +2,13 @@ package gold.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-public class UserStrategyModifyDTO {
+public class UserStrategyModifyDTO implements Serializable {
 
-    private Long userId;
-
-    private BigDecimal longAmount;
-
-    private BigDecimal shortAmount;
+    private String note;
 
     private BigDecimal highPrice;
 

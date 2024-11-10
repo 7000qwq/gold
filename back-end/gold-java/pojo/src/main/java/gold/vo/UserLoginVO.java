@@ -2,8 +2,10 @@ package gold.vo;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class UserLoginVO {
+public class UserLoginVO implements Serializable {
 
     private Long id;
 

@@ -1,9 +1,11 @@
 package gold.controller;
 
 import gold.result.Result;
+import gold.service.GoldPriceService;
 import gold.vo.GoldPriceHistoryVO;
 import gold.vo.PositionVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,9 +20,12 @@ import java.time.LocalDateTime;
 @Slf4j
 public class GoldPriceController {
 
+    @Autowired
+    private GoldPriceService goldPriceService;
+
     @GetMapping("/realTime")
     public Result<BigDecimal> realTime(){
-        BigDecimal price = BigDecimal.valueOf(1.0);
+        BigDecimal price = goldPriceService.getPirce();
         return Result.success(price);
     }
 

@@ -1,12 +1,12 @@
 package gold.dto;
 
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class TransactionPageQueryDTO {
+public class TransactionPageQueryDTO implements Serializable {
 
     private Long userId;
 
@@ -17,9 +17,11 @@ public class TransactionPageQueryDTO {
     private Integer type;
     // 0 - buy      1 - sell
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private String stringBeginTime;
+
+    private String stringEndTime;
+
     private LocalDateTime beginTime;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
 }

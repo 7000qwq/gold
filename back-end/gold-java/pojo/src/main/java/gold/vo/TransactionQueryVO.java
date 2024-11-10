@@ -2,11 +2,12 @@ package gold.vo;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class TransactionQueryVO {
+public class TransactionQueryVO implements Serializable {
 
     private Long id;
 

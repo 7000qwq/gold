@@ -10,4 +10,5 @@ public class MessageConstant {
     public static final String ALREADY_EXISTS = "Account already exist";
     public static final String UNKNOWN_ERROR = "Unknown error";
     public static final String USER_NOT_LOGIN = "Please login";
+    public static final String CANNOT_GET_PRICE = "Can not get real time gold price";
 }

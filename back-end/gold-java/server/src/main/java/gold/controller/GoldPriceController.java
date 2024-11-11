@@ -24,8 +24,8 @@ public class GoldPriceController {
     private GoldPriceService goldPriceService;
 
     @GetMapping("/realTime")
-    public Result<BigDecimal> realTime(){
-        BigDecimal price = goldPriceService.getPirce();
+    public Result<BigDecimal> realtime() {
+        BigDecimal price = goldPriceService.newestPrice();
         return Result.success(price);
     }
 

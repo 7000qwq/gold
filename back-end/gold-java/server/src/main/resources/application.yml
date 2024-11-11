@@ -17,6 +17,23 @@ spring:
     port: ${gold.redis.port}
     password: ${gold.redis.password}
     database: ${gold.redis.database}
+  rabbitmq:
+    host: ${gold.rabbitmq.host}
+    port: ${gold.rabbitmq.port}
+    virtual-host: ${gold.rabbitmq.virtual-host}
+    username: ${gold.rabbitmq.username}
+    password: ${gold.rabbitmq.password}
+    publisher-confirm-type: ${gold.rabbitmq.publisher-confirm-type}
+    publisher-returns: ${gold.rabbitmq.publisher-returns}
+    connection-timeout: ${gold.rabbitmq.connection-timeout}  # MQ连接超时时间
+    template:
+      retry:
+        enabled: ${gold.rabbitmq.template.retry.enabled}            # 开启超时重试
+        initial-interval: ${gold.rabbitmq.template.retry.initial-interval}  # 失败后初始等待时间
+        multiplier: ${gold.rabbitmq.template.retry.multiplier}      # 再次失败后等待倍数
+        max-attempts: ${gold.rabbitmq.template.retry.max-attempts}  # 最大重试倍数
+
+
 
 mybatis:
   #mapper配置文件
@@ -25,6 +42,8 @@ mybatis:
   configuration:
     #开启驼峰命名
     map-underscore-to-camel-case: true
+
+
 
 logging:
   level:
@@ -35,9 +54,10 @@ logging:
 
 gold:
   jwt:
-    # 设置jwt签名加密时使用的秘钥
-    user-secret-key: increase
-    # 设置jwt过期时间
-    user-ttl: 7200000
-    # 设置前端传递过来的令牌名称
-    user-token-name: Authorization
+    user-secret-key: ${gold.jwt.user-secret-key}
+    user-ttl: ${gold.jwt.user-ttl}
+    user-token-name: ${gold.jwt.user-token-name}
+
+  resend:
+    from: ${gold.resend.from}
+    ak: ${gold.resend.ak}

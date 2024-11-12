@@ -2,12 +2,11 @@ package gold.service;
 
 import gold.dto.UserLoginDTO;
 import gold.dto.UserModifyDTO;
-import gold.dto.UserSignupDTO;
 import gold.entity.User;
 
 public interface UserService {
 
-    void signup(UserSignupDTO userSignupDTO);
+    void insert(User user);
 
     User login(UserLoginDTO userLoginDTO);
 

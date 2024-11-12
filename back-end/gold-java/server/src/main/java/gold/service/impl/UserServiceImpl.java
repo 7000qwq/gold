@@ -4,7 +4,6 @@ import gold.constant.MessageConstant;
 import gold.context.BaseContext;
 import gold.dto.UserLoginDTO;
 import gold.dto.UserModifyDTO;
-import gold.dto.UserSignupDTO;
 import gold.entity.User;
 import gold.exception.AccountNotFoundException;
 import gold.exception.PasswordErrorException;
@@ -24,16 +23,11 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
 
     @Override
-    public void signup(UserSignupDTO userSignupDTO) {
+    public void insert(User user) {
 
         // insert into user
-        User user = new User();
-        BeanUtils.copyProperties(userSignupDTO, user);
         user.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
-
         userMapper.insert(user);
-
-
     }
 
     @Override

@@ -90,9 +90,10 @@ public class SchedulTask {
                 BigDecimal highPrice = (BigDecimal) redisTemplate.opsForHash().get(id, "highPrice");
                 BigDecimal lowPrice = (BigDecimal) redisTemplate.opsForHash().get(id, "lowPrice");
                 if ( (highPrice != null && highPrice.compareTo(bigDecimalData) != 1) || (lowPrice != null && lowPrice.compareTo(bigDecimalData) != -1) ) {
-                    if ( (lastTime == null || Duration.between(lastTime, LocalDateTime.now()).toHours() > 1 ) && lastPrice.subtract(bigDecimalData).abs().compareTo(BigDecimal.ONE) == 1 ) {
-                        // emailUtil.sendReminderMail(userMapper.getById(id).getEmail(), bigDecimalData);
+                    if ( (lastTime == null || Duration.between(lastTime, LocalDateTime.now()).toHours() > 6 ) && lastPrice.subtract(bigDecimalData).abs().compareTo(BigDecimal.ONE) == 1 ) {
+
                         log.info("此处应发邮件提醒goldPrice:{}", bigDecimalData);
+                        // emailUtil.sendReminderMail(userMapper.getById(id).getEmail(), bigDecimalData);
                         lastTime = LocalDateTime.now();
                         lastPrice = bigDecimalData;
                     }

@@ -194,18 +194,25 @@
                     'Authorization': token
                 }
             });
-            let result = await response.json();
 
-            if (result.code == 0) {
-                showAlert(result.msg);
+            if (response.ok) {
+                let result = await response.json();
+
+                if (result.code == 0) {
+                    showAlert(result.msg);
+                    return;
+                }
+
+                if (result.code == 1 && result.data) {
+                    document.getElementById('note').value = result.data.note || '';
+                    document.getElementById('lowPrice').value = result.data.lowPrice || '';
+                    document.getElementById('highPrice').value = result.data.highPrice || '';
+                    document.getElementById('emailReminder').checked = result.data.emailNotification === 1;
+                }
+            } else if (response.status === 401) {
+                alert('You need to log in.');
+                window.location.href = 'login.html';
                 return;
-            }
-
-            if (result.code == 1 && result.data) {
-                document.getElementById('note').value = result.data.note || '';
-                document.getElementById('lowPrice').value = result.data.lowPrice || '';
-                document.getElementById('highPrice').value = result.data.highPrice || '';
-                document.getElementById('emailReminder').checked = result.data.emailNotification === 1;
             }
         } catch (error) {
             console.error('Error loading strategy data:', error);
@@ -223,39 +230,47 @@
                     'Authorization': token
                 }
             });
-            let loginResult = await loginResponse.json();
-            if (loginResult.code !== 1) {
-                alert('You need to log in to save your strategy.');
+            if (loginResponse.ok) {
+                let loginResult = await loginResponse.json();
+                if (loginResult.code !== 1) {
+                    alert('You need to log in to save your strategy.');
+                    return;
+                }
+
+                const note = document.getElementById('note').value;
+                const lowPrice = document.getElementById('lowPrice').value;
+                const highPrice = document.getElementById('highPrice').value;
+                const emailNotification = document.getElementById('emailReminder').checked ? 1 : 0;
+
+                let response = await fetch('/user/strategy', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify({ note, lowPrice, highPrice, emailNotification })
+                });
+
+                let res = await response.json();
+
+                if (res.code == 0) {
+                    showAlert(res.msg);
+                    return;
+                }
+
+                if (res.code == 1) {
+                    alert('Strategy saved successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to save strategy. Please try again.');
+                }
+
+            } else if (loginResponse.status === 401) {
+                alert('You need to log in.');
+                window.location.href = 'login.html';
                 return;
             }
 
-            const note = document.getElementById('note').value;
-            const lowPrice = document.getElementById('lowPrice').value;
-            const highPrice = document.getElementById('highPrice').value;
-            const emailNotification = document.getElementById('emailReminder').checked ? 1 : 0;
-
-            let response = await fetch('/user/strategy', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token
-                },
-                body: JSON.stringify({ note, lowPrice, highPrice, emailNotification })
-            });
-
-            let res = await response.json();
-
-            if (res.code == 0) {
-                showAlert(res.msg);
-                return;
-            }
-
-            if (res.code == 1) {
-                alert('Strategy saved successfully!');
-                location.reload();
-            } else {
-                alert('Failed to save strategy. Please try again.');
-            }
         } catch (error) {
             console.error('Error saving strategy data:', error);
             alert('An error occurred. Please try again later.');
@@ -276,21 +291,29 @@
                     'Authorization': token
                 }
             });
-            let result = await response.json();
-            const loginDiv = document.getElementById('loginStatus');
 
-            if (result.code == 1) {
-                loginDiv.innerHTML = `
-                    <div class="user-dropdown">
-                        <a href="#">${result.data}</a>
-                        <div class="dropdown-content">
-                            <a href="#" onclick="logout()">Logout</a>
-                            <a href="edituser.html">Edit</a>
+
+            if (response.ok) {
+                let result = await response.json();
+                const loginDiv = document.getElementById('loginStatus');
+
+                if (result.code == 1) {
+                    loginDiv.innerHTML = `
+                        <div class="user-dropdown">
+                            <a href="#">${result.data}</a>
+                            <div class="dropdown-content">
+                                <a href="#" onclick="logout()">Logout</a>
+                                <a href="edituser.html">Edit</a>
+                            </div>
                         </div>
-                    </div>
-                `;
-            } else {
-                loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+                    `;
+                } else {
+                    loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+                }
+            } else if (response.status == 401) {
+                alert('You need to log in.');
+                window.location.href = 'login.html';
+                return;
             }
         } catch (error) {
             console.error('Error checking login status:', error);

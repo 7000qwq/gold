@@ -34,7 +34,6 @@ spring:
         max-attempts: ${gold.rabbitmq.template.retry.max-attempts}  # 最大重试倍数
 
 
-
 mybatis:
   #mapper配置文件
   mapper-locations: classpath:mapper/*.xml
@@ -42,7 +41,6 @@ mybatis:
   configuration:
     #开启驼峰命名
     map-underscore-to-camel-case: true
-
 
 
 logging:
@@ -61,3 +59,6 @@ gold:
   resend:
     from: ${gold.resend.from}
     ak: ${gold.resend.ak}
+
+  domain:
+    url: ${gold.domain.url}

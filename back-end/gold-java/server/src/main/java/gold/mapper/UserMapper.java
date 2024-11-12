@@ -1,7 +1,6 @@
 package gold.mapper;
 
 import gold.entity.User;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -11,7 +10,7 @@ import java.util.List;
 @Mapper
 public interface UserMapper {
 
-    @Insert("insert into user (username, phone, email, password) values (#{username}, #{phone}, #{email}, #{password})")
+
     void insert(User user);
 
     @Select("select * from user where email = #{email}")

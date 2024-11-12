@@ -36,6 +36,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .addPathPatterns("/transaction/**")
                 .addPathPatterns("/user/**")
                 .excludePathPatterns("/user/login")
+                .excludePathPatterns("/user/verify")
                 .excludePathPatterns("/user/signup");
     }
 

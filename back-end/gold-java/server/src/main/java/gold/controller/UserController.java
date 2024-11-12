@@ -1,5 +1,6 @@
 package gold.controller;
 
+import com.resend.core.exception.ResendException;
 import gold.context.BaseContext;
 import gold.dto.UserLoginDTO;
 import gold.dto.UserModifyDTO;
@@ -9,19 +10,25 @@ import gold.entity.User;
 import gold.properties.JwtProperties;
 import gold.result.Result;
 import gold.service.UserService;
+import gold.utils.EmailUtil;
 import gold.utils.JwtUtil;
 import gold.vo.UserLoginVO;
 import gold.vo.UserSearchVO;
 import gold.vo.UserStrategyGetVO;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -37,11 +44,46 @@ public class UserController {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @PostMapping("/signup")
-    public Result signup(@RequestBody UserSignupDTO userSignupDTO){
+    @Value("${gold.domain.url}")
+    private String url;
 
-        userService.signup(userSignupDTO);
+    @Autowired
+    private EmailUtil emailUtil;
+
+    @PostMapping("/signup")
+    public Result signup(@RequestBody UserSignupDTO userSignupDTO) throws ResendException {
+
+        User user = new User();
+        BeanUtils.copyProperties(userSignupDTO, user);
+        redisTemplate.opsForValue().set(user.getEmail(), user, 1, TimeUnit.HOURS);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userEmail", user.getEmail());
+        String token = JwtUtil.createJWT(
+                jwtProperties.getUserSecretKey(),
+                jwtProperties.getUserTtl(),
+                claims);
+
+        String link = url + "/user/verify?token=" + token;
+        log.info("验证url:{}", link);
+        emailUtil.sendSignupMail(user.getEmail(), link);
+
         return Result.success();
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verify(String token) {
+
+        log.info("jwt校验:{}", token);
+        Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
+        String userEmail = claims.get("userEmail").toString();
+        log.info("当前用户email：{}", userEmail);
+
+        User user = (User) redisTemplate.opsForValue().get(userEmail);
+        userService.insert(user);
+
+        String htmlResponse = "<html><body>Verification successful. Redirecting...<script>window.location.href='/login.html';</script></body></html>";
+        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(htmlResponse);
     }
 
     @PostMapping("/login")

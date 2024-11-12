@@ -279,22 +279,30 @@
                     'Authorization': token
                 }
             });
-            let result = await response.json();
-            const loginDiv = document.getElementById('loginStatus');
 
-            if (result.code == 1) {
-                loginDiv.innerHTML = `
-                    <div class="user-dropdown">
-                        <a href="#">${result.data}</a>
-                        <div class="dropdown-content">
-                            <a href="#" onclick="logout()">Logout</a>
-                            <a href="edituser.html">Edit</a>
+            if (response.ok) {
+                let result = await response.json();
+                const loginDiv = document.getElementById('loginStatus');
+
+                if (result.code == 1) {
+                    loginDiv.innerHTML = `
+                        <div class="user-dropdown">
+                            <a href="#">${result.data}</a>
+                            <div class="dropdown-content">
+                                <a href="#" onclick="logout()">Logout</a>
+                                <a href="edituser.html">Edit</a>
+                            </div>
                         </div>
-                    </div>
-                `;
-            } else {
-                loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+                    `;
+                } else {
+                    loginDiv.innerHTML = '<a href="login.html">Log in</a>';
+                }
+            } else if (response.status === 401) {
+                alert('You need to log in.');
+                window.location.href = 'login.html';
+                return;
             }
+
         } catch (error) {
             console.error('Error checking login status:', error);
             document.getElementById('loginStatus').innerHTML = '<a href="login.html">Log in</a>';
@@ -338,44 +346,52 @@
                     'Authorization': token
                 }
             });
-            let loginResult = await loginResponse.json();
-            if (loginResult.code !== 1) {
-                alert('You need to log in.');
-                return;
-            }
 
-            const type = document.getElementById('type').value;
-            let dateFrom = document.getElementById('dateFrom').value;
-            let dateTo = document.getElementById('dateTo').value;
-            const page = parseInt(document.getElementById('currentPage').value);
-            const pageSize = parseInt(document.getElementById('pageSize').value);
-
-            const queryParams = new URLSearchParams({
-                stringBeginTime: dateFrom,
-                stringEndTime: dateTo,
-                type: type,
-                page: page,
-                pageSize: pageSize
-            });
-
-            let response = await fetch(`/transaction/page?${queryParams.toString()}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': token
+            if (loginResponse.ok) {
+                let loginResult = await loginResponse.json();
+                if (loginResult.code !== 1) {
+                    alert('You need to log in.');
+                    return;
                 }
-            });
 
-            let result = await response.json();
+                const type = document.getElementById('type').value;
+                let dateFrom = document.getElementById('dateFrom').value;
+                let dateTo = document.getElementById('dateTo').value;
+                const page = parseInt(document.getElementById('currentPage').value);
+                const pageSize = parseInt(document.getElementById('pageSize').value);
 
-            if (result.code == 0) {
-                showAlert(result.msg);
+                const queryParams = new URLSearchParams({
+                    stringBeginTime: dateFrom,
+                    stringEndTime: dateTo,
+                    type: type,
+                    page: page,
+                    pageSize: pageSize
+                });
+
+                let response = await fetch(`/transaction/page?${queryParams.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+
+                let result = await response.json();
+
+                if (result.code == 0) {
+                    showAlert(result.msg);
+                    return;
+                }
+
+                if (result.code == 1) {
+                    renderTable(result.data.records);
+                    updatePagination(result.data.total, pageSize);
+                }
+            } else if (loginResponse.status === 401) {
+                alert('You need to log in.');
+                window.location.href = 'login.html';
                 return;
             }
 
-            if (result.code == 1) {
-                renderTable(result.data.records);
-                updatePagination(result.data.total, pageSize);
-            }
         } catch (error) {
             console.error('Error searching:', error);
             alert('An error occurred. Please try again later.');
@@ -522,19 +538,6 @@
     }
 
     async function handleNewItem() {
-        const token = localStorage.getItem('jwtToken');
-        let loginResponse = await fetch('/user/name', {
-            method: 'GET',
-            headers: {
-                'Authorization': token
-            }
-        });
-        let loginResult = await loginResponse.json();
-        if (loginResult.code !== 1) {
-            alert('You need to log in.');
-            return;
-        }
-
         window.location.href = 'addtransaction.html';
     }
 </script>

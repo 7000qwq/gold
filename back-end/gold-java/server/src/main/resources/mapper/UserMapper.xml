@@ -4,4 +4,8 @@
 <mapper namespace="gold.mapper.UserMapper">
 
 
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into user (username, phone, email, password) values
+        (#{username}, #{phone}, #{email}, #{password})
+    </insert>
 </mapper>

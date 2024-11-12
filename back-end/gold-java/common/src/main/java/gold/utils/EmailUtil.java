@@ -29,7 +29,7 @@ public class EmailUtil {
         String html = loadTemplate("template/reminder_email.html");
         if (html != null) {
             // 替换 [[PRICE]] 占位符为实际价格
-            html = html.replace("[[PRICE]]", price.toPlainString());
+            html = html.replace("[[${bigDecimalData}]]", price.toPlainString());
         }
 
         // 构建邮件内容

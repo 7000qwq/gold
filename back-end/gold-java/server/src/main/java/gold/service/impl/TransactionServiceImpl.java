@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -62,5 +63,12 @@ public class TransactionServiceImpl implements TransactionService {
         BeanUtils.copyProperties(transactionModifyDTO, transaction);
         transaction.setUserId(BaseContext.getCurrentId());
         transactionMapper.update(transaction);
+    }
+
+    @Override
+    public BigDecimal position(Long currentId) {
+
+        BigDecimal weight = transactionMapper.position(currentId);
+        return weight;
     }
 }

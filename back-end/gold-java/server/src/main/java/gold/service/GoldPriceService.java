@@ -1,8 +1,9 @@
 package gold.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 public interface GoldPriceService {
 
-    BigDecimal newestPrice();
+    BigDecimal newestPrice() throws IOException, InterruptedException;
 }

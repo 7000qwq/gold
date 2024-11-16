@@ -6,6 +6,8 @@ import gold.dto.TransactionPageQueryDTO;
 import gold.entity.Transaction;
 import gold.result.PageResult;
 
+import java.math.BigDecimal;
+
 public interface TransactionService {
 
     void insert(TransactionAddDTO transactionAddDTO);
@@ -17,4 +19,6 @@ public interface TransactionService {
     Transaction getTransactionById(Long id);
 
     void update(TransactionModifyDTO transactionModifyDTO);
+
+    BigDecimal position(Long currentId);
 }

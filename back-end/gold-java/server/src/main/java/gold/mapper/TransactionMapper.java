@@ -5,6 +5,8 @@ import gold.dto.TransactionPageQueryDTO;
 import gold.entity.Transaction;
 import org.apache.ibatis.annotations.*;
 
+import java.math.BigDecimal;
+
 @Mapper
 public interface TransactionMapper {
 
@@ -27,4 +29,6 @@ public interface TransactionMapper {
             "amount = #{amount}, commission = #{commission}, note = #{note}, weight = #{weight}" +
             "WHERE id = #{id}")
     void update(Transaction transaction);
+
+    BigDecimal position(Long currentId);
 }

@@ -1,17 +1,19 @@
 package gold.controller;
 
+import gold.context.BaseContext;
 import gold.result.Result;
 import gold.service.GoldPriceService;
+import gold.service.TransactionService;
 import gold.vo.GoldPriceHistoryVO;
-import gold.vo.PositionVO;
+import gold.vo.GoldPriceVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -23,10 +25,16 @@ public class GoldPriceController {
     @Autowired
     private GoldPriceService goldPriceService;
 
+    @Autowired
+    private TransactionService transactionService;
+
     @GetMapping("/realTime")
-    public Result<BigDecimal> realtime() {
-        BigDecimal price = goldPriceService.newestPrice();
-        return Result.success(price);
+    public Result<GoldPriceVO> realtime() throws IOException, InterruptedException {
+        GoldPriceVO goldPriceVO = new GoldPriceVO();
+        goldPriceVO.setGoldPrice(goldPriceService.newestPrice());
+        goldPriceVO.setTime(LocalDateTime.now());
+
+        return Result.success(goldPriceVO);
     }
 
     @GetMapping("/report")
@@ -39,10 +47,11 @@ public class GoldPriceController {
         return Result.success(goldPriceHistoryVO);
     }
 
-    @GetMapping("/position/{id}")
-    public Result<PositionVO> position(@PathVariable Long id){
+    @GetMapping("/position")
+    public Result<BigDecimal> position(){
 
-        PositionVO positionVO = new PositionVO();
-        return Result.success(positionVO);
+        BigDecimal weight = transactionService.position(BaseContext.getCurrentId());
+        log.info("持仓重量为:{}", weight);
+        return Result.success(weight);
     }
 }

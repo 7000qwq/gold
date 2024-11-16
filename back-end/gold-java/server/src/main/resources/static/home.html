@@ -6,6 +6,8 @@
     <title>Gold Price Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -160,12 +162,14 @@
             </div>
         </div>
         <div class="info-panel">
+            <h3>DATA ACCESS TIME</h3>
+            <p id="timestamp">XX:XX</p>
             <h3>REAL TIME GOLD PRICE</h3>
             <p id="goldPrice">XXX.XX</p>
-            <h3>POSITION PRICE</h3>
-            <p id="positionPrice">******.**</p>
-            <h3>INCOME FROM POSITIONS</h3>
-            <p id="income">******.**</p>
+            <h3>POSITION PRICE(￥)</h3>
+            <p id="positionPrice">Please log in</p>
+            <h3>POSITION WEIGHT(g)</h3>
+            <p id="positionWeight">Please log in</p>
         </div>
     </div>
 </main>
@@ -212,26 +216,6 @@
             chart.setOption(option);
         } catch (error) {
             console.error('Error fetching chart data:', error);
-        }
-    }
-
-    // Function to update the information panel with backend data
-    async function updateInfoPanel() {
-        try {
-            const token = localStorage.getItem('jwtToken');
-            let response = await fetch('/api/info-panel', {
-                method: 'GET',
-                headers: {
-                    'Authorization': token
-                }
-            });
-            let result = await response.json();
-
-            document.getElementById('goldPrice').innerText = result.goldPrice;
-            document.getElementById('positionPrice').innerText = result.positionPrice;
-            document.getElementById('income').innerText = result.income;
-        } catch (error) {
-            console.error('Error fetching info panel data:', error);
         }
     }
 
@@ -315,10 +299,104 @@
         }
     }
 
+    const socket = new SockJS('/gold-price'); // 连接端点
+    const stompClient = Stomp.over(socket);
+    let price = null;
+
+    stompClient.connect({}, function (frame) {
+        console.log('Connected: ' + frame);
+
+        // 订阅黄金价格
+        stompClient.subscribe('/topic/gold-price', function (message) {
+            const data = JSON.parse(message.body);
+
+            // 获取价格和时间戳
+            price = data.price;
+            const timestamp = new Date(data.timestamp);
+
+            // 使用 Intl.DateTimeFormat 格式化时间
+            const formatter = new Intl.DateTimeFormat('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false // 24小时制
+            });
+
+            const formattedTime = formatter.format(timestamp).replace(/\//g, '.');
+
+            // 更新界面
+            document.getElementById('goldPrice').innerText = `${price}`;
+            document.getElementById('timestamp').innerText = `${formattedTime}`;
+        });
+    });
+
+    // 页面加载时通过 HTTP 请求获取最新黄金价格
+    function fetchLatestGoldPrice() {
+        fetch('/goldPrice/realTime')
+            .then(response => response.json())
+            .then(result => {
+                // 检查返回码是否成功
+                if (result.code === 1) {
+                    const data = result.data;
+
+                    // 获取价格和时间戳
+                    price = data.goldPrice; // goldPrice 对应 VO 的字段
+                    const timestamp = new Date(data.time); // time 对应 VO 的字段
+
+                    // 格式化时间为 "YYYY.MM.DD HH:mm:ss"
+                    const formattedTime = timestamp.getFullYear() + '.' +
+                                          String(timestamp.getMonth() + 1).padStart(2, '0') + '.' +
+                                          String(timestamp.getDate()).padStart(2, '0') + ' ' +
+                                          String(timestamp.getHours()).padStart(2, '0') + ':' +
+                                          String(timestamp.getMinutes()).padStart(2, '0') + ':' +
+                                          String(timestamp.getSeconds()).padStart(2, '0');
+
+                    // 更新界面
+                    document.getElementById('goldPrice').innerText = `${price}`;
+                    document.getElementById('timestamp').innerText = `${formattedTime}`;
+                } else {
+                    console.error('Failed to fetch the latest gold price: Unexpected response code', result.code);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to fetch the latest gold price:', error);
+            });
+    }
+
+    function fetchPosition() {
+        const token = localStorage.getItem('jwtToken');
+        fetch('/goldPrice/position', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                // 检查返回码是否成功
+                if (result.code === 1) {
+                    const weight = result.data;
+
+                    // 更新界面
+                    document.getElementById('positionWeight').innerText = `${weight}`;
+                    document.getElementById('positionPrice').innerText = `${price*weight}`;
+                } else {
+                    console.error('Failed to fetch the latest gold price: Unexpected response code', result.code);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to fetch the latest gold price:', error);
+            });
+    }
+
     // Initial data load
     updateChart('1d');
-    updateInfoPanel();
     checkLoginStatus();
+    fetchLatestGoldPrice();
+    fetchPosition();
 </script>
 </body>
 </html>

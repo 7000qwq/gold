@@ -42,7 +42,7 @@
             font-weight: bold;
         }
         .history-container {
-            max-width: 900px;
+            max-width: 1300px;
             margin: 50px auto;
             padding: 20px;
             background-color: #d9e9f3;
@@ -51,7 +51,7 @@
         }
         .history-container .filters {
             display: flex;
-            gap: 20px;
+            justify-content: space-between;
             margin-bottom: 20px;
             align-items: center;
         }
@@ -207,7 +207,7 @@
             </select>
 
             <div class="input-container">
-                <label for="dateFrom">Time:</label>
+                <label for="dateFrom">from</label>
                 <div class="datetime-input-wrapper">
                     <input type="datetime-local" id="dateFrom" name="dateFrom">
                     <span class="clear-icon" onclick="clearDate('dateFrom')">&times;</span>
@@ -224,6 +224,8 @@
 
             <button onclick="handleSearch(event)">Search</button>
             <button class="new-item" onclick="handleNewItem()">+ New item</button>
+
+            <button onclick="downloadExcel()">Download Excel</button>
         </div>
         <table>
             <thead>
@@ -540,6 +542,38 @@
     async function handleNewItem() {
         window.location.href = 'addtransaction.html';
     }
+
+    async function downloadExcel() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await fetch('/transaction/downloadExcel', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to download Excel. Please check your authentication or try again later.');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'Transaction_History.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            alert('Excel file downloaded successfully!');
+        } catch (error) {
+            console.error('Error downloading Excel:', error);
+            alert('An error occurred while trying to download the Excel file.');
+        }
+    }
+
 </script>
 </body>
 </html>

@@ -6,6 +6,7 @@ import gold.entity.Transaction;
 import org.apache.ibatis.annotations.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Mapper
 public interface TransactionMapper {
@@ -31,4 +32,7 @@ public interface TransactionMapper {
     void update(Transaction transaction);
 
     BigDecimal position(Long currentId);
+
+    @Select("select * from history where user_id = #{userID}")
+    List<Transaction> getExcelByUserId(Long userID);
 }

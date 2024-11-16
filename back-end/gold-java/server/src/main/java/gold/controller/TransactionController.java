@@ -10,7 +10,6 @@ import gold.result.Result;
 import gold.service.TransactionService;
 import gold.vo.TransactionQueryVO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -23,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -84,31 +82,56 @@ public class TransactionController {
     // todo
     @GetMapping("/downloadExcel")
     public void downloadExcel(HttpServletResponse response) throws IOException {
+
+        Long userID = BaseContext.getCurrentId();
+
         // 创建一个新的 Excel 工作簿
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Transaction History");
 
-        // 设置表头
-        String[] columns = {"Date", "Buy/Sell", "Traded Gold Price", "Transaction amount", "Commission", "Note"};
-        Row headerRow = sheet.createRow(0);
-        for (int i = 0; i < columns.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(columns[i]);
-        }
-
         // 示例数据，可以用数据库数据替换
-        List<List<String>> data = Arrays.asList(
-                Arrays.asList("2024-11-10", "Buy", "1950", "10", "1", "First transaction"),
-                Arrays.asList("2024-11-11", "Sell", "1960", "5", "0.5", "Second transaction")
-        );
+        List<Transaction> data = transactionService.getExcelByUserId(userID);
+
+        // 创建表头
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Time", "Type", "Gold Price", "Amount", "Weight", "Commission", "Note"};
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
 
         // 填充表格数据
         int rowNum = 1;
-        for (List<String> rowData : data) {
+        for (Transaction rowData : data) {
             Row row = sheet.createRow(rowNum++);
-            for (int i = 0; i < rowData.size(); i++) {
-                row.createCell(i).setCellValue(rowData.get(i));
-            }
+
+            // 填充每列数据
+            row.createCell(0).setCellValue(
+                    rowData.getTime() != null ? rowData.getTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : ""
+            );
+
+            row.createCell(1).setCellValue(
+                    rowData.getType() != null ? (rowData.getType() == 0 ? "Buy" : "Sell") : ""
+            );
+
+            row.createCell(2).setCellValue(
+                    rowData.getGoldPrice() != null ? rowData.getGoldPrice().toPlainString() : ""
+            );
+
+            row.createCell(3).setCellValue(
+                    rowData.getAmount() != null ? rowData.getAmount().toPlainString() : ""
+            );
+
+            row.createCell(4).setCellValue(
+                    rowData.getWeight() != null ? rowData.getWeight().toPlainString() : ""
+            );
+
+            row.createCell(5).setCellValue(
+                    rowData.getCommission() != null ? rowData.getCommission().toPlainString() : ""
+            );
+
+            row.createCell(6).setCellValue(
+                    rowData.getNote() != null ? rowData.getNote() : ""
+            );
         }
 
         // 设置 HTTP 响应头，准备下载文件

@@ -9,6 +9,7 @@ import gold.vo.GoldPriceHistoryVO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface TransactionService {
 
@@ -25,4 +26,6 @@ public interface TransactionService {
     BigDecimal position(Long currentId);
 
     GoldPriceHistoryVO report(LocalDateTime beginTime, LocalDateTime endTime);
+
+    List<Transaction> getExcelByUserId(Long userID);
 }

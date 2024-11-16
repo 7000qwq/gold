@@ -105,4 +105,9 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("返回图表数据为:{}", goldPriceHistoryVO);
         return goldPriceHistoryVO;
     }
+
+    @Override
+    public List<Transaction> getExcelByUserId(Long userID) {
+        return transactionMapper.getExcelByUserId(userID);
+    }
 }

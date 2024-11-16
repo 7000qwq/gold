@@ -5,8 +5,10 @@ import gold.dto.TransactionModifyDTO;
 import gold.dto.TransactionPageQueryDTO;
 import gold.entity.Transaction;
 import gold.result.PageResult;
+import gold.vo.GoldPriceHistoryVO;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public interface TransactionService {
 
@@ -21,4 +23,6 @@ public interface TransactionService {
     void update(TransactionModifyDTO transactionModifyDTO);
 
     BigDecimal position(Long currentId);
+
+    GoldPriceHistoryVO report(LocalDateTime beginTime, LocalDateTime endTime);
 }

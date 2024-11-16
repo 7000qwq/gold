@@ -62,23 +62,6 @@
             margin-right: 20px;
             height: 100%;
         }
-        .time-buttons {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-        .time-buttons button {
-            padding: 10px;
-            background-color: #f0c987;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .time-buttons button:hover {
-            background-color: #e6b77e;
-        }
         .info-panel {
             flex: 1;
             min-width: 250px;
@@ -153,13 +136,6 @@
     <div class="main-content">
         <div class="chart-container">
             <div id="goldChart" style="width: 100%; height: 400px;"></div>
-            <div class="time-buttons">
-                <button onclick="updateChart('6h')">6 hours</button>
-                <button onclick="updateChart('1d')">1 day</button>
-                <button onclick="updateChart('1w')">1 week</button>
-                <button onclick="updateChart('1m')">1 month</button>
-                <button onclick="updateChart('6m')">6 months</button>
-            </div>
         </div>
         <div class="info-panel">
             <h3>DATA ACCESS TIME</h3>
@@ -181,43 +157,82 @@
         title: {
             text: 'Gold Price Trend'
         },
-        tooltip: {},
+        tooltip: {
+            trigger: 'axis',
+            formatter: function (params) {
+                return `${params[0].axisValue}<br/>${params[0].seriesName}: ${params[0].data}`;
+            }
+        },
         xAxis: {
             type: 'category',
-            data: [] // Data to be updated based on button click
+            data: [] // Data to be updated with timeList
         },
         yAxis: {
-            type: 'value'
+            type: 'value',
+            name: 'Price'
         },
         series: [{
             name: 'Gold Price',
             type: 'line',
-            data: [] // Data to be updated based on button click
+            data: [] // Data to be updated with priceList
         }]
     };
 
     chart.setOption(option);
 
-    async function updateChart(range) {
+
+    // Helper function to format time strings
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    }
+
+    // Helper function to replace zero prices with previous valid price
+    function replaceZeroPrices(prices) {
+        const correctedPrices = [];
+        for (let i = 0; i < prices.length; i++) {
+            if (prices[i] === 0 || isNaN(prices[i])) {
+                correctedPrices[i] = correctedPrices[i - 1] || 0; // Use previous valid price, or 0 if it's the first element
+            } else {
+                correctedPrices[i] = prices[i];
+            }
+        }
+        return correctedPrices;
+    }
+
+    async function updateChart() {
         try {
             // Fetch data from the backend
-            const token = localStorage.getItem('jwtToken');
-            let response = await fetch(`/api/gold-price?range=${range}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': token
-                }
+            let response = await fetch('/goldPrice/report', {
+                method: 'GET'
             });
-            let result = await response.json();
 
-            // Update chart with backend data
-            option.xAxis.data = result.xAxisData;
-            option.series[0].data = result.data;
-            chart.setOption(option);
+            if (response.ok) {
+                let result = await response.json();
+
+                // Parse the backend data
+                const timeList = result.data.timeList.split(',');
+                const priceList = result.data.priceList.split(',').map(parseFloat);
+
+                // Format timeList for better readability
+                const formattedTimeList = timeList.map(time => formatTime(time));
+
+                // Replace zero prices with previous valid price
+                const correctedPrices = replaceZeroPrices(priceList);
+
+                // Update the chart with valid data
+                option.xAxis.data = formattedTimeList;
+                option.series[0].data = correctedPrices;
+
+                chart.setOption(option);
+            } else {
+                console.error('Failed to fetch chart data. Status:', response.status);
+            }
         } catch (error) {
             console.error('Error fetching chart data:', error);
         }
     }
+
 
     function showAlert(message) {
             const alertBox = document.createElement('div');
@@ -299,9 +314,34 @@
         }
     }
 
+    // Function to add a new data point to the chart
+    function addNewDataPoint(price, timePart) {
+
+        // Use the previous valid price if current price is 0 or null
+        if (price === 0 || price === null) {
+            const previousPrices = option.series[0].data;
+            price = previousPrices.length > 0 ? previousPrices[previousPrices.length - 1] : 0;
+        }
+
+        // Update xAxis and series data
+        option.xAxis.data.push(timePart);
+        option.series[0].data.push(price);
+
+        // Limit the number of data points to avoid memory overflow
+        if (option.xAxis.data.length > 50) {
+            option.xAxis.data.shift(); // Remove the oldest time
+            option.series[0].data.shift(); // Remove the oldest price
+        }
+
+        // Update the chart
+        chart.setOption(option);
+    }
+
+
     const socket = new SockJS('/gold-price'); // 连接端点
     const stompClient = Stomp.over(socket);
     let price = null;
+    let timestamp = null;
 
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
@@ -312,7 +352,13 @@
 
             // 获取价格和时间戳
             price = data.price;
-            const timestamp = new Date(data.timestamp);
+            timestamp = new Date(data.timestamp);
+
+            // Use the previous valid price if current price is 0 or null
+            if (price === 0 || price === null) {
+                const previousPrices = option.series[0].data;
+                price = previousPrices.length > 0 ? previousPrices[previousPrices.length - 1] : 0;
+            }
 
             // 使用 Intl.DateTimeFormat 格式化时间
             const formatter = new Intl.DateTimeFormat('zh-CN', {
@@ -330,6 +376,16 @@
             // 更新界面
             document.getElementById('goldPrice').innerText = `${price}`;
             document.getElementById('timestamp').innerText = `${formattedTime}`;
+
+            // Add the new data point to the chart
+            if (typeof formattedTime !== 'string') {
+                // Convert to string if necessary
+                formattedTime = String(formattedTime);
+            }
+            const [datePart, timePart] = formattedTime.split(' ');
+            addNewDataPoint(price, timePart);
+
+            fetchPosition();
         });
     });
 
@@ -344,7 +400,13 @@
 
                     // 获取价格和时间戳
                     price = data.goldPrice; // goldPrice 对应 VO 的字段
-                    const timestamp = new Date(data.time); // time 对应 VO 的字段
+                    timestamp = new Date(data.time); // time 对应 VO 的字段
+
+                    // Use the previous valid price if current price is 0 or null
+                    if (price === 0 || price === null) {
+                        const previousPrices = option.series[0].data;
+                        price = previousPrices.length > 0 ? previousPrices[previousPrices.length - 1] : 0;
+                    }
 
                     // 格式化时间为 "YYYY.MM.DD HH:mm:ss"
                     const formattedTime = timestamp.getFullYear() + '.' +
@@ -380,9 +442,15 @@
                 if (result.code === 1) {
                     const weight = result.data;
 
+                    // Use the previous valid price if current price is 0 or null
+                    if (price === 0 || price === null) {
+                        const previousPrices = option.series[0].data;
+                        price = previousPrices.length > 0 ? previousPrices[previousPrices.length - 1] : 0;
+                    }
+
                     // 更新界面
                     document.getElementById('positionWeight').innerText = `${weight}`;
-                    document.getElementById('positionPrice').innerText = `${price*weight}`;
+                    document.getElementById('positionPrice').innerText = `${(price * weight).toFixed(2)}`;
                 } else {
                     console.error('Failed to fetch the latest gold price: Unexpected response code', result.code);
                 }
@@ -393,7 +461,7 @@
     }
 
     // Initial data load
-    updateChart('1d');
+    updateChart();
     checkLoginStatus();
     fetchLatestGoldPrice();
     fetchPosition();

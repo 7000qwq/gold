@@ -12,4 +12,5 @@ public class GoldPriceHistoryVO implements Serializable {
 
     //金价，以逗号分隔，例如：406.0,1520.0
     private String priceList;
+
 }

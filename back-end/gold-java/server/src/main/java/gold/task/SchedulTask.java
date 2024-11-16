@@ -71,6 +71,9 @@ public class SchedulTask {
         }
 
         // 向minute_price插入数据
+        if (bigDecimalData.compareTo(BigDecimal.ZERO) == 0) {
+            bigDecimalData = goldPriceMapper.getNewestPrice();
+        }
         MinutePrice minutePrice = new MinutePrice(LocalDateTime.now(), bigDecimalData);
         goldPriceMapper.insert(minutePrice);
 

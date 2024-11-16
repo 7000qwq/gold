@@ -8,7 +8,6 @@ import gold.vo.GoldPriceHistoryVO;
 import gold.vo.GoldPriceVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,12 +37,11 @@ public class GoldPriceController {
     }
 
     @GetMapping("/report")
-    public Result<GoldPriceHistoryVO> report(
-            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")LocalDateTime beginTime,
-            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")LocalDateTime endTime
-            ){
+    public Result<GoldPriceHistoryVO> report(){
 
-        GoldPriceHistoryVO goldPriceHistoryVO = new GoldPriceHistoryVO();
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime beginTime = endTime.plusHours(-6);
+        GoldPriceHistoryVO goldPriceHistoryVO = transactionService.report(beginTime, endTime);
         return Result.success(goldPriceHistoryVO);
     }
 

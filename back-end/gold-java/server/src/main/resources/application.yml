@@ -1,9 +1,9 @@
 server:
-  port: 8081
+  port: 8080
 
 spring:
   profiles:
-    active: dev
+    active: release
   main:
     allow-circular-references: true
   datasource:

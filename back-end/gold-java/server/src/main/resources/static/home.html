@@ -220,6 +220,22 @@
                 // Replace zero prices with previous valid price
                 const correctedPrices = replaceZeroPrices(priceList);
 
+                // === 修改部分：动态计算y轴范围并避免单一值问题 ===
+                let minPrice = Math.min(...correctedPrices);
+                let maxPrice = Math.max(...correctedPrices);
+                const yAxisBuffer = (maxPrice - minPrice) * 0.1; // 缓冲增加到20%
+
+                // 如果数据只有一个值，增加默认范围
+                if (minPrice === maxPrice) {
+                    minPrice -= 5; // 减去固定缓冲值
+                    maxPrice += 5; // 加上固定缓冲值
+                } else {
+                    minPrice = Math.floor(minPrice - yAxisBuffer); // 设置最小值
+                    maxPrice = Math.ceil(maxPrice + yAxisBuffer);  // 设置最大值
+                }
+                option.yAxis.min = minPrice;
+                option.yAxis.max = maxPrice;
+
                 // Update the chart with valid data
                 option.xAxis.data = formattedTimeList;
                 option.series[0].data = correctedPrices;
@@ -429,36 +445,49 @@
     }
 
     function fetchPosition() {
-        const token = localStorage.getItem('jwtToken');
-        fetch('/goldPrice/position', {
-                method: 'GET',
-                headers: {
-                    'Authorization': token
+        fetch('/goldPrice/realTime')
+            .then(response => response.json())
+            .then(realTimeResult => {
+                if (realTimeResult.code === 1) {
+                    const data = realTimeResult.data;
+                    return data.goldPrice; // 将价格作为结果传递给下一个链
+                } else {
+                    console.error('Failed to fetch the latest gold price: Unexpected response code', realTimeResult.code);
+                    throw new Error('Failed to fetch gold price');
                 }
             })
-            .then(response => response.json())
-            .then(result => {
-                // 检查返回码是否成功
-                if (result.code === 1) {
-                    const weight = result.data;
-
-                    // Use the previous valid price if current price is 0 or null
-                    if (price === 0 || price === null) {
-                        const previousPrices = option.series[0].data;
-                        price = previousPrices.length > 0 ? previousPrices[previousPrices.length - 1] : 0;
+            .then(price => {
+                const token = localStorage.getItem('jwtToken');
+                return fetch('/goldPrice/position', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token
                     }
+                })
+                    .then(response => response.json())
+                    .then(positionResult => {
+                        if (positionResult.code === 1) {
+                            const weight = positionResult.data;
 
-                    // 更新界面
-                    document.getElementById('positionWeight').innerText = `${weight}`;
-                    document.getElementById('positionPrice').innerText = `${(price * weight).toFixed(2)}`;
-                } else {
-                    console.error('Failed to fetch the latest gold price: Unexpected response code', result.code);
-                }
+                            // 如果价格为 0 或 null，使用上一个有效价格
+                            if (price === 0 || price === null) {
+                                const previousPrices = option.series[0].data;
+                                price = previousPrices.length > 0 ? previousPrices[previousPrices.length - 1] : 0;
+                            }
+
+                            // 更新界面
+                            document.getElementById('positionWeight').innerText = `${weight}`;
+                            document.getElementById('positionPrice').innerText = `${(price * weight).toFixed(2)}`;
+                        } else {
+                            console.error('Failed to fetch the latest gold price: Unexpected response code', positionResult.code);
+                        }
+                    });
             })
             .catch(error => {
-                console.error('Failed to fetch the latest gold price:', error);
+                console.error('Error occurred during fetch:', error);
             });
     }
+
 
     // Initial data load
     updateChart();

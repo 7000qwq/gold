@@ -53,13 +53,15 @@
             const phone = document.getElementById('phoneNumber').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
 
-            if (!email) {
-                alert('Email is required.');
+            if (!email || !password || !confirmPassword) {
+                alert('Fill in all * fields');
                 return;
             }
-            if (!password) {
-                alert('Password is required.');
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
                 return;
             }
 
@@ -198,6 +200,8 @@
             <input type="text" id="email" name="email" required><br>
             <label for="password">Password</label><br>
             <input type="password" id="password" name="password"><br>
+            <label for="confirmPassword">Confirm Password *</label><br>
+            <input type="password" id="confirmPassword" name="confirmPassword" required><br>
             <div class="button-group">
                 <button type="button" class="cancel-button" onclick="handleCancel()">Cancel</button>
                 <button type="submit" class="save-button">Save</button>

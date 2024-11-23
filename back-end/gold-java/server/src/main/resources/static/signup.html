@@ -23,11 +23,21 @@
             const phone = document.getElementById('phoneNumber').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
 
-            if (!email || !password) {
+            if (!email || !password || !confirmPassword) {
                 alert('Fill in all * fields');
                 return;
             }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true; // 禁用按钮
+            submitButton.innerText = "Submitting..."; // 改变按钮文字（可选）
 
             try {
                 let response = await fetch('/user/signup', {
@@ -53,6 +63,9 @@
             } catch (error) {
                 console.error('Error during sign up:', error);
                 alert('An error occurred. Please try again later.');
+            } finally {
+            submitButton.disabled = false; // 恢复按钮状态
+            submitButton.innerText = "Save"; // 恢复按钮文字
             }
         }
 
@@ -173,9 +186,11 @@
             <input type="text" id="email" name="email" required><br>
             <label for="password">Password *</label><br>
             <input type="password" id="password" name="password" required><br>
+            <label for="confirmPassword">Confirm Password *</label><br>
+            <input type="password" id="confirmPassword" name="confirmPassword" required><br>
             <div class="button-group">
                 <button type="button" class="cancel-button" onclick="handleCancel()">Cancel</button>
-                <button type="submit" class="save-button">Save</button>
+                <button type="submit" class="save-button" id="submit-button">Save</button>
             </div>
         </form>
     </div>

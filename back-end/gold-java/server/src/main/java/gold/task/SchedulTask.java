@@ -62,7 +62,7 @@ public class SchedulTask {
                     if ( (lastTime == null || Duration.between(lastTime, LocalDateTime.now()).toHours() > 6 ) && lastPrice.subtract(bigDecimalData).abs().compareTo(BigDecimal.ONE) == 1 ) {
 
                         log.info("此处应发邮件提醒goldPrice:{}", bigDecimalData);
-                        // emailUtil.sendReminderMail(userMapper.getById(id).getEmail(), bigDecimalData);
+                        emailUtil.sendReminderMail(userMapper.getById(id).getEmail(), bigDecimalData);
                         lastTime = LocalDateTime.now();
                         lastPrice = bigDecimalData;
                     }

@@ -1,0 +1,45 @@
+gold:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: mysql # 在 Docker Compose 中，MySQL 服务的主机名为服务名
+    port: 3306
+    database: gold
+    username: mysql_qwq7000 # 使用 docker-compose.yml 中的配置
+    password: uQ6qU0uW6nD6
+
+  redis:
+    host: redis # 在 Docker Compose 中，Redis 服务的主机名为服务名
+    port: 6379
+    password: zX7oA1pO0h
+    database: 1
+
+  rabbitmq:
+    host: rabbitmq # 在 Docker Compose 中，RabbitMQ 服务的主机名为服务名
+    port: 5672
+    virtual-host: /qwq7000
+    username: rabbitmq_qwq7000
+    password: kL9pQ9hH1xG2zY
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    connection-timeout: 1s        # MQ连接超时时间
+    template:
+      retry:
+        enabled: true             # 开启超时重试
+        initial-interval: 2000ms  # 失败后初始等待时间
+        multiplier: 1             # 再次失败后等待倍数
+        max-attempts: 3           # 最大重试倍数
+
+  resend:
+    from: notification@qwq7000.top
+    AK: re_6TVhqTFm_N4KUdJJDDbmzzVSgrXPYxiGz
+
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    user-secret-key: increase
+    # 设置jwt过期时间
+    user-ttl: 7200000
+    # 设置前端传递过来的令牌名称
+    user-token-name: Authorization
+
+  domain:
+    url: https://www.qwq7000.top

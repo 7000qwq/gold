@@ -126,7 +126,7 @@
 <main>
     <div class="edit-container">
         <form onsubmit="handleSave(event)">
-            <label for="date">Time *</label><br>
+            <label for="dateTime">Time *</label><br>
             <input type="datetime-local" id="dateTime" name="dateTime" style="width: calc(100% - 20px);"><br>
             <label for="type">Type *</label><br>
             <select id="type" name="type">
@@ -225,29 +225,37 @@
         }
     }
 
-    // 当任何一个输入发生变化时，自动计算并更新相关值
-    document.getElementById('goldPrice').addEventListener('input', calculateTransactionAmount);
-    document.getElementById('transactionWeight').addEventListener('input', calculateTransactionAmount);
-    document.getElementById('transactionAmount').addEventListener('input', calculateWeightOrPrice);
+    // 当输入框失去焦点时，根据当前输入进行相关计算
+    document.getElementById('goldPrice').addEventListener('blur', calculateValues);
+    document.getElementById('transactionWeight').addEventListener('blur', calculateValues);
+    document.getElementById('transactionAmount').addEventListener('blur', calculateValues);
 
-    function calculateTransactionAmount() {
+    function calculateValues(event) {
         const goldPrice = parseFloat(document.getElementById('goldPrice').value);
         const transactionWeight = parseFloat(document.getElementById('transactionWeight').value);
-
-        if (!isNaN(goldPrice) && !isNaN(transactionWeight)) {
-            const transactionAmount = goldPrice * transactionWeight;
-            document.getElementById('transactionAmount').value = transactionAmount.toFixed(2); // 保留2位小数
-            document.getElementById('goldPrice').value = goldPrice.toFixed(2); // 保留2位小数
-        }
-    }
-
-    function calculateWeightOrPrice() {
         const transactionAmount = parseFloat(document.getElementById('transactionAmount').value);
-        const goldPrice = parseFloat(document.getElementById('goldPrice').value);
 
-        if (!isNaN(transactionAmount) && !isNaN(goldPrice) && goldPrice !== 0) {
-            const transactionWeight = transactionAmount / goldPrice;
-            document.getElementById('transactionWeight').value = transactionWeight.toFixed(4); // 保留4位小数
+        if (event.target.id === 'transactionWeight') {
+            // 当用户输入重量时，计算总额
+            if (!isNaN(goldPrice) && !isNaN(transactionWeight)) {
+                const calculatedAmount = goldPrice * transactionWeight;
+                document.getElementById('transactionAmount').value = calculatedAmount.toFixed(2); // 保留 2 位小数
+            }
+        } else if (event.target.id === 'transactionAmount') {
+            // 当用户输入总额时，计算重量
+            if (!isNaN(goldPrice) && !isNaN(transactionAmount) && goldPrice !== 0) {
+                const calculatedWeight = transactionAmount / goldPrice;
+                document.getElementById('transactionWeight').value = calculatedWeight.toFixed(4); // 保留 4 位小数
+            }
+        } else if (event.target.id === 'goldPrice') {
+            // 当用户输入价格时，根据已输入的重量或总额进行计算
+            if (!isNaN(transactionWeight)) {
+                const calculatedAmount = goldPrice * transactionWeight;
+                document.getElementById('transactionAmount').value = calculatedAmount.toFixed(2); // 保留 2 位小数
+            } else if (!isNaN(transactionAmount)) {
+                const calculatedWeight = transactionAmount / goldPrice;
+                document.getElementById('transactionWeight').value = calculatedWeight.toFixed(4); // 保留 4 位小数
+            }
         }
     }
 

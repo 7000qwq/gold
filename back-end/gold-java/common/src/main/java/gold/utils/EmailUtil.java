@@ -7,11 +7,11 @@ import com.resend.services.emails.model.CreateEmailResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 @Component
 public class EmailUtil {
@@ -47,6 +47,7 @@ public class EmailUtil {
         Resend resend = new Resend(ak);
 
         // 读取模板文件内容
+
         String html = loadTemplate("template/signup_email.html");
         // 替换 [[verificationLink]] 占位符为带token的验证url
         if (html != null) html = html.replace("[[verificationLink]]", url);
@@ -64,11 +65,18 @@ public class EmailUtil {
 
     // 加载 HTML 模板
     private String loadTemplate(String filePath) {
-        try {
-            return new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource(filePath).toURI())));
-        } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
-            return null;
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filePath);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+            return content.toString();
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace(); // 打印异常日志，方便调试
+            return null; // 如果文件加载失败，返回null
         }
     }
 }

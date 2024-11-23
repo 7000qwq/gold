@@ -17,6 +17,7 @@ import gold.vo.UserSearchVO;
 import gold.vo.UserStrategyGetVO;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +51,9 @@ public class UserController {
     @Autowired
     private EmailUtil emailUtil;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @PostMapping("/signup")
     public Result signup(@RequestBody UserSignupDTO userSignupDTO) throws ResendException {
 
@@ -66,7 +70,11 @@ public class UserController {
 
         String link = url + "/user/verify?token=" + token;
         log.info("验证url:{}", link);
-        emailUtil.sendSignupMail(user.getEmail(), link);
+
+        Map<String, String> message = new HashMap<>();
+        message.put("email", user.getEmail());
+        message.put("link", link);
+        rabbitTemplate.convertAndSend("sent-email-exchange", "sent-email-routing-key", message);
 
         return Result.success();
     }

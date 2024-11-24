@@ -72,9 +72,8 @@ This project is a web application designed, developed, and deployed to support r
    - Use an HTTPS tunneling service to map the Raspberry Pi’s internal network to a public domain.
 
 ## Future Enhancements
-- Add support for additional precious metal price monitoring.
-- Introduce user role-based access control for enhanced security.
-- Implement data visualization dashboards for better analytical insights.
+- Add line charts of gold prices for different time scales.  
+- Develop an automated trading tool.
 
 ---
 

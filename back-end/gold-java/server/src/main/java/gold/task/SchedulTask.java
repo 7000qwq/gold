@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,9 @@ import java.util.Map;
 @Component
 @Slf4j
 public class SchedulTask {
+
+    @Autowired
+    private KafkaTemplate kafkaTemplate;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -85,8 +89,12 @@ public class SchedulTask {
         Map<String, Object> message = new HashMap<>();
         message.put("price", bigDecimalData);
         message.put("timestamp", System.currentTimeMillis()); // 当前时间戳
-        rabbitTemplate.convertAndSend("gold-price-exchange", "gold-price-routing-key", message);
 
+        // rabbitMQ
+        //rabbitTemplate.convertAndSend("gold-price-exchange", "gold-price-routing-key", message);
+
+        // kafka
+        kafkaTemplate.send("gold-price-topic", message);
     }
 
 

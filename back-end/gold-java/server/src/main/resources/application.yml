@@ -3,7 +3,7 @@ server:
 
 spring:
   profiles:
-    active: release
+    active: dev
   main:
     allow-circular-references: true
   datasource:
@@ -33,6 +33,22 @@ spring:
         multiplier: ${gold.rabbitmq.template.retry.multiplier}      # 再次失败后等待倍数
         max-attempts: ${gold.rabbitmq.template.retry.max-attempts}  # 最大重试倍数
 
+  kafka:
+    bootstrap-servers: ${gold.kafka.bootstrap-servers}  # Kafka 的地址（通常为 broker 地址，多个地址用逗号分隔）
+    consumer:
+      auto-offset-reset: ${gold.kafka.consumer.auto-offset-reset}           # 如果没有偏移量信息，则从最早的消息开始消费
+      enable-auto-commit: ${gold.kafka.consumer.enable-auto-commit}              # 自动提交偏移量
+      auto-commit-interval: ${gold.kafka.consumer.auto-commit-interval}          # 自动提交偏移量的时间间隔
+      key-deserializer: ${gold.kafka.consumer.key-deserializer}   # Key 的序列化器
+      value-deserializer: ${gold.kafka.consumer.value-deserializer} # Value 的序列化器
+      spring.json.trusted.packages: ${gold.kafka.consumer.spring.json.trusted.packages}  # 允许反序列化所有包下的类型
+    producer:
+      retries: ${gold.kafka.producer.retries}                            # 生产者的最大重试次数
+      acks: ${gold.kafka.producer.acks}                             # 确认级别（all 表示 leader 和所有副本都确认才算成功）
+      key-serializer: ${gold.kafka.producer.key-serializer}   # Key 的序列化器
+      value-serializer: ${gold.kafka.producer.value-serializer} # Value 的序列化器
+    listener:
+      concurrency: ${gold.kafka.listener.concurrency}                        # 并发消费线程数
 
 mybatis:
   #mapper配置文件

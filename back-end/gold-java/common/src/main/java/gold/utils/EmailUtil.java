@@ -79,4 +79,51 @@ public class EmailUtil {
             return null; // 如果文件加载失败，返回null
         }
     }
+
+    public void sendBuyMail(String mail, BigDecimal price) throws ResendException {
+        Resend resend = new Resend(ak);
+        String message = "没有价格在xxx的持仓，当前金价为xxx.xx，请买入";
+        // 获取整数部分和带两位小数的字符串
+        String integerPart = price.toBigInteger().toString();
+        String strPrice = price.toString();
+
+        // 替换 message 中的 xxx 和 xxx.xx
+        message = message.replace("xxx.xx", strPrice)
+                .replace("xxx", integerPart);
+
+        // 构建邮件内容
+        CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                .from(from)
+                .to(mail)
+                .subject("Gold Price: BUY")
+                .html(message)
+                .build();
+
+        CreateEmailResponse data = resend.emails().send(createEmailOptions);
+    }
+
+    public void sendSellMail(String mail, BigDecimal price, BigDecimal goldPrice, BigDecimal weight) throws ResendException {
+
+        Resend resend = new Resend(ak);
+        String message = "有价格为yyy.yy的持仓x.xxxx克，当前金价为xxx.xx，请卖出";
+        // 获取字符串
+        String strPrice = price.toString();
+        String strGoldPrice = goldPrice.toString();
+        String strWeight = weight.toString();
+
+        // 替换 message 中的 xxx 和 xxx.xx
+        message = message.replace("xxx.xx", strPrice)
+                .replace("yyy.yy", strGoldPrice)
+                .replace("x.xxxx", strWeight);
+
+        // 构建邮件内容
+        CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                .from(from)
+                .to(mail)
+                .subject("Gold Price: SELL")
+                .html(message)
+                .build();
+
+        CreateEmailResponse data = resend.emails().send(createEmailOptions);
+    }
 }

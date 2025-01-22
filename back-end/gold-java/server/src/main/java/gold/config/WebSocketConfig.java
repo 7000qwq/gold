@@ -21,6 +21,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/gold-price").withSockJS();
+        registry.addEndpoint("/gold-price")
+                .setAllowedOrigins("https://www.qwq7000.top", "https://qwq7000.top")
+                .withSockJS();
+
     }
 }

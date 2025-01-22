@@ -6,6 +6,7 @@ import gold.service.GoldPriceService;
 import gold.service.TransactionService;
 import gold.vo.GoldPriceHistoryVO;
 import gold.vo.GoldPriceVO;
+import gold.vo.TransactionHistoryVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,7 +31,11 @@ public class GoldPriceController {
     @GetMapping("/realTime")
     public Result<GoldPriceVO> realtime() throws IOException, InterruptedException {
         GoldPriceVO goldPriceVO = new GoldPriceVO();
-        goldPriceVO.setGoldPrice(goldPriceService.newestPrice());
+        // 爬虫
+        // goldPriceVO.setGoldPrice(goldPriceService.newestPrice());
+
+        // waydroid
+        goldPriceVO.setGoldPrice(goldPriceService.getCurrentGoldPrice());
         goldPriceVO.setTime(LocalDateTime.now());
 
         return Result.success(goldPriceVO);
@@ -51,5 +56,12 @@ public class GoldPriceController {
         BigDecimal weight = transactionService.position(BaseContext.getCurrentId());
         log.info("持仓重量为:{}", weight);
         return Result.success(weight);
+    }
+
+    @GetMapping("/positionAll")
+    public Result<TransactionHistoryVO> positionAll(){
+
+        TransactionHistoryVO transactionHistoryVO = transactionService.positionAll(BaseContext.getCurrentId());
+        return Result.success(transactionHistoryVO);
     }
 }

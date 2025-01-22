@@ -13,7 +13,6 @@ public class WebSocketMessageController {
     public String handleSendMessage(@Payload String message) {
         // 处理前端发来的消息
         System.out.println("Received message from client: " + message);
-
         // 返回数据广播给订阅者
         return "Processed message: " + message;
     }

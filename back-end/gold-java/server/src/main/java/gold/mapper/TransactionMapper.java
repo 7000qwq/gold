@@ -35,4 +35,17 @@ public interface TransactionMapper {
 
     @Select("select * from history where user_id = #{userID}")
     List<Transaction> getExcelByUserId(Long userID);
+
+    @Select("SELECT * FROM history " +
+            "WHERE user_id = 1 " +
+            "AND type = 0 " +
+            "AND note = '' " +
+            "AND FLOOR(gold_price) = FLOOR(CAST(#{price} AS DECIMAL(10, 2)))")
+    List<Transaction> findMatchingRecords(BigDecimal price);
+
+    @Select("SELECT * FROM history " +
+            "WHERE user_id = #{userId} " +
+            "AND type = 0 " +
+            "AND note = '' ")
+    List<Transaction> getPositionAllByUserId(Long userId);
 }

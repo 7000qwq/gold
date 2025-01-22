@@ -43,3 +43,6 @@ gold:
 
   domain:
     url: https://www.qwq7000.top
+
+  python-http:
+    url: http://nginx/get_price

@@ -13,6 +13,7 @@ import gold.mapper.TransactionMapper;
 import gold.result.PageResult;
 import gold.service.TransactionService;
 import gold.vo.GoldPriceHistoryVO;
+import gold.vo.TransactionHistoryVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,5 +110,38 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<Transaction> getExcelByUserId(Long userID) {
         return transactionMapper.getExcelByUserId(userID);
+    }
+
+    @Override
+    public TransactionHistoryVO positionAll(Long userId) {
+        String priceList = "";
+        String weightList = "";
+        String dateList = "";
+
+        List<Transaction> list = transactionMapper.getPositionAllByUserId(userId);
+
+        for (Transaction transaction : list) {
+            priceList = priceList + transaction.getGoldPrice().toString() + ",";
+            weightList = weightList + transaction.getWeight().toString() + ",";
+            dateList = dateList + transaction.getTime().toString() + ",";
+        }
+        if (priceList.length() > 0) {
+            priceList = priceList.substring(0, priceList.length() - 1);
+        }
+        if (weightList.length() > 0) {
+            weightList = weightList.substring(0, weightList.length() - 1);
+        }
+        if (dateList.length() > 0) {
+            dateList = dateList.substring(0, dateList.length() - 1);
+        }
+
+        TransactionHistoryVO transactionHistoryVO = new TransactionHistoryVO();
+        transactionHistoryVO.setPriceList(priceList);
+        transactionHistoryVO.setWeightList(weightList);
+        transactionHistoryVO.setTimeList(dateList);
+        log.info("返回图表数据为:{}", transactionHistoryVO);
+
+        return transactionHistoryVO;
+
     }
 }

@@ -3,9 +3,11 @@ package gold.service.impl;
 import gold.constant.MessageConstant;
 import gold.exception.PriceNotFoundException;
 import gold.service.GoldPriceService;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -18,6 +20,8 @@ import java.net.http.HttpResponse;
 @Service
 public class GoldPriceServiceImpl implements GoldPriceService {
 
+    @Value("${gold.python-http.url}")
+    private String python_url;
 
     @Override
     public BigDecimal newestPrice() throws IOException, InterruptedException {
@@ -60,5 +64,30 @@ public class GoldPriceServiceImpl implements GoldPriceService {
 
     }
 
+    @Override
+    public BigDecimal getCurrentGoldPrice() throws IOException, InterruptedException {
+        // 创建 HttpClient 实例
+        HttpClient client = HttpClient.newHttpClient();
 
+        // 开发环境下用 http://localhost:5000/get_price
+        // 构建 GET 请求
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(python_url))  // Python 接口的 URL
+                .GET()
+                .build();
+
+        // 发送请求并获取响应
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            // 解析响应 JSON
+            JSONObject jsonResponse = new JSONObject(response.body());
+            String priceStr = jsonResponse.getString("price");
+
+            // 将价格转换为 BigDecimal 并返回
+            return new BigDecimal(priceStr);
+        } else {
+            throw new IOException("Failed to get price: " + response.statusCode());
+        }
+    }
 }

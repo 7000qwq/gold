@@ -6,4 +6,5 @@ import java.math.BigDecimal;
 public interface GoldPriceService {
 
     BigDecimal newestPrice() throws IOException, InterruptedException;
+    BigDecimal getCurrentGoldPrice() throws IOException, InterruptedException;
 }

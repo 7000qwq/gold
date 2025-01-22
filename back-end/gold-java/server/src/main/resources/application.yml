@@ -3,7 +3,7 @@ server:
 
 spring:
   profiles:
-    active: dev
+    active: release
   main:
     allow-circular-references: true
   datasource:
@@ -78,3 +78,6 @@ gold:
 
   domain:
     url: ${gold.domain.url}
+
+  python-http:
+    url: ${gold.python-http.url}

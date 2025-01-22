@@ -6,6 +6,7 @@ import gold.dto.TransactionPageQueryDTO;
 import gold.entity.Transaction;
 import gold.result.PageResult;
 import gold.vo.GoldPriceHistoryVO;
+import gold.vo.TransactionHistoryVO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,4 +29,6 @@ public interface TransactionService {
     GoldPriceHistoryVO report(LocalDateTime beginTime, LocalDateTime endTime);
 
     List<Transaction> getExcelByUserId(Long userID);
+
+    TransactionHistoryVO positionAll(Long userId);
 }

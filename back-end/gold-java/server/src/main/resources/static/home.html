@@ -13,7 +13,8 @@
             font-family: Arial, sans-serif;
             background-color: #f7f3ef;
             color: #333;
-            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
         header {
             display: flex;
@@ -45,39 +46,66 @@
             color: white;
             font-weight: bold;
         }
-        .main-content {
+        /* 整体布局容器 */
+        .layout-container {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: space-between;
             margin: 20px;
-            align-items: flex-start;
+            gap: 20px;
+            height: 500px;
         }
-        .chart-container {
+
+        /* 左侧图表区域 */
+        .chart-group {
+            display: flex;
+            flex-direction: column;
             flex: 2;
-            min-width: 300px;
-            padding: 20px;
+            gap: 20px;
+        }
+
+        .chart {
+            flex: 1;
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-right: 20px;
-            height: 100%;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: 10px;
         }
+
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* 右侧信息面板 */
         .info-panel {
             flex: 1;
-            min-width: 250px;
-            padding: 20px;
             background-color: #d9e9f3;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            height: 100%;
+            max-width: 20%;
+            display: flex;
+            flex-direction: column; /* 垂直排列子元素 */
+            justify-content: center; /* 在纵向方向上居中 */
+            align-items: center; /* 水平方向居中（可选） */
+            text-align: center; /* 使文本内容居中对齐 */
+            padding: 30px 20px;
         }
         .info-panel h3 {
-            margin-top: 0;
+            font-size: 1.2em;
             color: #336699;
         }
         .info-panel p {
             font-size: 1.5em;
             font-weight: bold;
+            margin: 0; /* 确保子元素的外边距没有导致文字贴边 */
         }
         .user-dropdown {
             position: relative;
@@ -133,10 +161,18 @@
     <div class="login" id="loginStatus"><a href="login.html">Log in</a></div>
 </header>
 <main>
-    <div class="main-content">
-        <div class="chart-container">
-            <div id="goldChart" style="width: 100%; height: 400px;"></div>
+    <div class="layout-container">
+        <!-- 左侧图表区域 -->
+        <div class="chart-group">
+            <div id="goldChart" class="chart">
+                <div class="chart-title">Gold Price Chart</div>
+            </div>
+            <div id="barChart" class="chart">
+                <div class="chart-title">Position Weight Chart</div>
+            </div>
         </div>
+
+        <!-- 右侧信息面板 -->
         <div class="info-panel">
             <h3>DATA ACCESS TIME</h3>
             <p id="timestamp">XX:XX</p>
@@ -155,7 +191,8 @@
 
     var option = {
         title: {
-            text: 'Gold Price Trend'
+            text: 'Gold Price Trend',
+            left: 'center'
         },
         tooltip: {
             trigger: 'axis',
@@ -168,8 +205,7 @@
             data: [] // Data to be updated with timeList
         },
         yAxis: {
-            type: 'value',
-            name: 'Price'
+            type: 'value'
         },
         series: [{
             name: 'Gold Price',
@@ -354,7 +390,9 @@
     }
 
 
-    const socket = new SockJS('/gold-price'); // 连接端点
+    const socket = new SockJS('/gold-price', undefined, {
+    timeout: 20000 // 设置超时时间为20秒
+    }); // 连接端点
     const stompClient = Stomp.over(socket);
     let price = null;
     let timestamp = null;
@@ -488,12 +526,97 @@
             });
     }
 
+    async function fetchBarChartData() {
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const response = await fetch('/goldPrice/positionAll', { method: 'GET',
+                    headers: {
+                        'Authorization': token
+                        }
+                    });
+            if (response.ok) {
+                const result = await response.json();
+                const data = result.data; // 先获取data对象
+                const priceList = data.priceList.split(',').map(parseFloat);
+                const weightList = data.weightList.split(',').map(parseFloat);
+                const timeList = data.timeList.split(',');
+
+                // 修改后的格式化时间逻辑
+                const formattedTimeList = timeList.map(t => {
+                    const [date, time] = t.split('T');
+                    return `${date}\n${time}`;
+                });
+
+                // Initialize the bar chart
+                const barChart = echarts.init(document.getElementById('barChart'));
+
+                // Prepare the series with labels
+                const seriesData = priceList.map((price, index) => ({
+                    value: weightList[index],
+                    label: {
+                        show: true,
+                        formatter: () => formattedTimeList[index]
+                    }
+                }));
+
+                const barOption = {
+                    title: {
+                        text: 'Position Weight by Price',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            const index = params[0].dataIndex;
+                            return `
+                                Price: ${priceList[index]}<br/>
+                                Weight: ${weightList[index]} g<br/>
+                                Time: ${timeList[index].replace('T', ' ')}
+                            `;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: priceList,
+                        name: 'Price',
+                        nameLocation: 'middle',
+                        nameGap: 25
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Weight'
+                    },
+                    series: [{
+                        name: 'Weight',
+                        type: 'bar',
+                        data: weightList.map((weight, i) => ({
+                            value: weight,
+                            // 显示克重而非时间
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: `{c} g`
+                            }
+                        }))
+                    }]
+                };
+
+                // Set the option for bar chart
+                barChart.setOption(barOption);
+            } else {
+                console.error('Failed to fetch bar chart data. Status:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching bar chart data:', error);
+        }
+    }
 
     // Initial data load
     updateChart();
     checkLoginStatus();
     fetchLatestGoldPrice();
     fetchPosition();
+    fetchBarChartData();
 </script>
 </body>
 </html>

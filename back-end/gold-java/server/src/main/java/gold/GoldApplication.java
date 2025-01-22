@@ -7,7 +7,10 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+        org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class,
+        //org.springframework.boot.autoconfigure.kafka.KafkaReactiveStreamsAutoConfiguration.class
+})
 @EnableTransactionManagement
 @EnableScheduling
 @Slf4j

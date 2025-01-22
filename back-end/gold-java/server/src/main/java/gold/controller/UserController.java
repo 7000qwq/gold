@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -55,8 +54,8 @@ public class UserController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private KafkaTemplate kafkaTemplate;
+    //@Autowired
+    //private KafkaTemplate kafkaTemplate;
 
     @PostMapping("/signup")
     public Result signup(@RequestBody UserSignupDTO userSignupDTO) throws ResendException {
@@ -79,9 +78,9 @@ public class UserController {
         message.put("email", user.getEmail());
         message.put("link", link);
         // rabbitMQ
-        // rabbitTemplate.convertAndSend("sent-email-exchange", "sent-email-routing-key", message);
+        rabbitTemplate.convertAndSend("sent-email-exchange", "sent-email-routing-key", message);
         // kafka
-        kafkaTemplate.send("sent-email-topic", message);
+        // kafkaTemplate.send("sent-email-topic", message);
         return Result.success();
     }
 

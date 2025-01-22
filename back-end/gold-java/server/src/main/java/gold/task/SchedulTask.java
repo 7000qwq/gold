@@ -2,7 +2,9 @@ package gold.task;
 
 import com.resend.core.exception.ResendException;
 import gold.entity.MinutePrice;
+import gold.entity.Transaction;
 import gold.mapper.GoldPriceMapper;
+import gold.mapper.TransactionMapper;
 import gold.mapper.UserMapper;
 import gold.service.GoldPriceService;
 import gold.utils.EmailUtil;
@@ -10,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -26,8 +27,8 @@ import java.util.Map;
 @Slf4j
 public class SchedulTask {
 
-    @Autowired
-    private KafkaTemplate kafkaTemplate;
+    //@Autowired
+    //private KafkaTemplate kafkaTemplate;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -45,15 +46,43 @@ public class SchedulTask {
     private EmailUtil emailUtil;
 
     @Autowired
+    private TransactionMapper transactionMapper;
+
+    @Autowired
     private GoldPriceService goldPriceService;
 
     private BigDecimal lastPrice = BigDecimal.ZERO;
     private LocalDateTime lastTime;
 
+    // @Scheduled(cron = "0 * * * * ?")
+    // 15mins一次
+    @Scheduled(cron = "0 0/15 * * * ?")
+    public void check() throws ResendException, IOException, InterruptedException {
+
+        BigDecimal price = goldPriceService.getCurrentGoldPrice();
+
+        List<Transaction> matchingBuyRecords = transactionMapper.findMatchingRecords(price);
+        if (matchingBuyRecords.isEmpty()) {
+            // 没有价格在xxx的持仓，当前金价为xxx.xx，请买入
+            emailUtil.sendBuyMail("2805603902@qq.com", price);
+        }
+
+        List<Transaction> matchingSellRecords = transactionMapper.findMatchingRecords(price.subtract(BigDecimal.valueOf(6)));
+        for (Transaction transaction : matchingSellRecords) {
+            // 有价格为xxx.xx的持仓x.xxxx克，当前金价为xxx.xx，请卖出
+            emailUtil.sendSellMail("2805603902@qq.com", price, transaction.getGoldPrice(), transaction.getWeight());
+        }
+
+    }
+
     @Scheduled(cron = "0 * * * * ?")
     public void getPirce() throws IOException, InterruptedException, ResendException {
 
-        BigDecimal bigDecimalData = goldPriceService.newestPrice();
+        // 爬虫
+        //BigDecimal bigDecimalData = goldPriceService.newestPrice();
+
+        // waydroid
+        BigDecimal bigDecimalData = goldPriceService.getCurrentGoldPrice();
 
         // 如果reminder,检查价格[需要检查所有用户redis信息,需要先在user表里把全部user_id取出],如果满足发送邮件
         List<Long> list = userMapper.getAllId();
@@ -91,10 +120,10 @@ public class SchedulTask {
         message.put("timestamp", System.currentTimeMillis()); // 当前时间戳
 
         // rabbitMQ
-        //rabbitTemplate.convertAndSend("gold-price-exchange", "gold-price-routing-key", message);
+        rabbitTemplate.convertAndSend("gold-price-exchange", "gold-price-routing-key", message);
 
         // kafka
-        kafkaTemplate.send("gold-price-topic", message);
+        // kafkaTemplate.send("gold-price-topic", message);
     }
 
 

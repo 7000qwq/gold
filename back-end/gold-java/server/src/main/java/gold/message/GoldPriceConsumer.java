@@ -1,6 +1,6 @@
 package gold.message;
 
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +15,11 @@ public class GoldPriceConsumer {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @KafkaListener(topics = "gold-price-topic", groupId = "my-group")
-    //@RabbitListener(queues = "gold-price-queue") // 监听队列 rabbitMQ
+    // @KafkaListener(topics = "gold-price-topic", groupId = "my-group")
+    @RabbitListener(queues = "gold-price-queue") // 监听队列 rabbitMQ
     public void consumeGoldPrice(Map<String, Object> message) {
-        //System.out.println("Consumed message from RabbitMQ: " + message);
-        System.out.println("Consumed message from Kafka: " + message);
+        System.out.println("Consumed message from RabbitMQ: " + message);
+        // System.out.println("Consumed message from Kafka: " + message);
         // 推送到 WebSocket
         messagingTemplate.convertAndSend("/topic/gold-price", message);
     }

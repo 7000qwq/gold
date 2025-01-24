@@ -6,13 +6,20 @@ This project is a web application designed, developed, and deployed to support r
 **Project URL:** [https://www.qwq7000.top](https://www.qwq7000.top)  
 **GitHub Repository:** [https://github.com/7000qwq/gold](https://github.com/7000qwq/gold)
 
+![image](https://github.com/user-attachments/assets/f6a8e593-31c1-42d3-a1ca-c01a7ffd90b2)
+
+![image](https://github.com/user-attachments/assets/6ce486b5-06f0-4944-ad4e-7c648ee365c1)
+
+![image](https://github.com/user-attachments/assets/7d03a61f-9464-4e88-a635-1cdfd9cd9ac3)
+
+
 ## Tech Stack
 - **Backend:** SpringBoot (Java)
 - **Database:** MySQL
 - **Caching:** Redis
 - **Messaging:** RabbitMQ
 - **Real-Time Communication:** WebSocket
-- **Deployment Tools:** Nginx, Docker, Raspberry Pi
+- **Deployment Tools:** Nginx, Docker, Raspberry Pi, Waydroid
 
 ## Key Features
 ### Identity Verification
@@ -23,6 +30,7 @@ This project is a web application designed, developed, and deployed to support r
 ### Real-Time Gold Price Retrieval and Status Updates
 - Utilized Spring Task Scheduler for periodic retrieval of the latest gold prices.
 - Employed HttpClient and Jsoup to fetch data from external sources.
+- Use Waydroid and uiautomator2 to get the exactly gold price in 京东金融 app
 - Leveraged RabbitMQ and WebSocket to push real-time data to the frontend for seamless updates and chart displays.
 
 ### Asynchronous Message Handling

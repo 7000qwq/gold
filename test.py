@@ -2,14 +2,14 @@ from flask import Flask, jsonify
 import uiautomator2 as u2
 from datetime import datetime
 import re
-
+import time
 app = Flask(__name__)
 
 # 连接 Waydroid 设备
 # 开发环境 
-d = u2.connect("localhost:5555")
+# d = u2.connect("localhost:5555")
 # 生产环境 localhost换为 waydroid session start后出现的ip
-# d = u2.connect("192.168.240.112:5555")
+d = u2.connect("192.168.240.112:5555")
 
 @app.route('/get_price', methods=['GET'])
 def get_price():
@@ -21,7 +21,8 @@ def get_price():
         
         # 正则表达式提取价格，基于关键字段 "浙商实时金价"
         # pattern = r'<node.*?text="实时金价\(元/克\)".*?<node.*?text="(\d+\.\d{2})'
-        pattern = r'text="实时金价(\d+\.\d+)元/克"'
+        # pattern = r'text="实时金价(\d+\.\d+)元/克"'
+        pattern = r'text="实时金价".*?text="(\d+\.\d+)"'
 
         
         # 搜索匹配
@@ -40,4 +41,8 @@ def get_price():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    d.press("home") # 模拟Home键
+    d.click(375, 550) # 坐标点击
+    time.sleep(5)
+    d.click(170, 370) # 坐标点击
     app.run(host='0.0.0.0', port=5000, debug=True)

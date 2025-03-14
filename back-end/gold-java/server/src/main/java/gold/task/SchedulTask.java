@@ -59,7 +59,14 @@ public class SchedulTask {
     @Scheduled(cron = "0 0/15 * * * ?")
     public void check() throws ResendException, IOException, InterruptedException {
 
-        BigDecimal price = goldPriceService.getCurrentGoldPrice();
+        // 爬虫 爬上海黄金交易所
+        //BigDecimal bigDecimalData = goldPriceService.newestPrice();
+
+        // 爬虫 爬京东金融网页
+        BigDecimal price = goldPriceService.newestJDPrice();
+
+        // waydroid
+        // BigDecimal bigDecimalData = goldPriceService.getCurrentGoldPrice();
 
         List<Transaction> matchingBuyRecords = transactionMapper.findMatchingRecords(price);
         if (matchingBuyRecords.isEmpty()) {
@@ -78,11 +85,14 @@ public class SchedulTask {
     @Scheduled(cron = "0 * * * * ?")
     public void getPirce() throws IOException, InterruptedException, ResendException {
 
-        // 爬虫
+        // 爬虫 爬上海黄金交易所
         //BigDecimal bigDecimalData = goldPriceService.newestPrice();
 
+        // 爬虫 爬京东金融网页
+        BigDecimal bigDecimalData = goldPriceService.newestJDPrice();
+
         // waydroid
-        BigDecimal bigDecimalData = goldPriceService.getCurrentGoldPrice();
+        // BigDecimal bigDecimalData = goldPriceService.getCurrentGoldPrice();
 
         // 如果reminder,检查价格[需要检查所有用户redis信息,需要先在user表里把全部user_id取出],如果满足发送邮件
         List<Long> list = userMapper.getAllId();

@@ -23,6 +23,7 @@ public class GoldPriceServiceImpl implements GoldPriceService {
     @Value("${gold.python-http.url}")
     private String python_url;
 
+    // 从上海黄金交易所网页爬数据
     @Override
     public BigDecimal newestPrice() throws IOException, InterruptedException {
 
@@ -89,5 +90,37 @@ public class GoldPriceServiceImpl implements GoldPriceService {
         } else {
             throw new IOException("Failed to get price: " + response.statusCode());
         }
+    }
+
+    // 从京东金融网页爬数据
+    @Override
+    public BigDecimal newestJDPrice() throws IOException, InterruptedException {
+        // 1. 接口地址
+        String url = "https://ms.jr.jd.com/gw/generic/hj/h5/m/latestPrice?reqData=%7B%7D";
+
+        // 2. 使用 HttpClient 发送 GET 请求
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        // 3. 获取响应内容（JSON 格式）
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        String json = response.body();
+
+        // 4. 解析 JSON
+        //    这里演示用 org.json，如果用 Jackson 或其他 JSON 库都可以
+        JSONObject jsonObject = new JSONObject(json);
+        JSONObject datas = jsonObject
+                .getJSONObject("resultData")
+                .getJSONObject("datas");
+
+        // 5. 提取 price 字段
+        String priceStr = datas.getString("price");
+        System.out.println("获取的实时金价: " + priceStr);
+
+        // 6. 转换成 BigDecimal 返回
+        return new BigDecimal(priceStr);
     }
 }

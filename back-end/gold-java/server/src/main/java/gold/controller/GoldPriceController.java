@@ -31,13 +31,16 @@ public class GoldPriceController {
     @GetMapping("/realTime")
     public Result<GoldPriceVO> realtime() throws IOException, InterruptedException {
         GoldPriceVO goldPriceVO = new GoldPriceVO();
-        // 爬虫
+        // 爬虫 爬上海黄金交易所
         // goldPriceVO.setGoldPrice(goldPriceService.newestPrice());
 
         // waydroid
-        goldPriceVO.setGoldPrice(goldPriceService.getCurrentGoldPrice());
-        goldPriceVO.setTime(LocalDateTime.now());
+        // goldPriceVO.setGoldPrice(goldPriceService.getCurrentGoldPrice());
 
+        // 爬虫 爬京东金融网页
+        goldPriceVO.setGoldPrice(goldPriceService.newestJDPrice());
+
+        goldPriceVO.setTime(LocalDateTime.now());
         return Result.success(goldPriceVO);
     }
 

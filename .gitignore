@@ -38,4 +38,6 @@ build/
 .DS_Store
 
 /back-end/gold-java/server/src/main/resources/application-dev.yml
-/gold/
+www.qwq7000.top.crt
+www.qwq7000.top.key
+gold

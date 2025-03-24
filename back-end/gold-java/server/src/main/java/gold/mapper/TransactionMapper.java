@@ -48,4 +48,7 @@ public interface TransactionMapper {
             "AND type = 0 " +
             "AND note = '' ")
     List<Transaction> getPositionAllByUserId(Long userId);
+
+    @Update("UPDATE history SET note = 'soldAndBuy' WHERE id = #{id}")
+    void markSoldAndBuy(Long id);
 }

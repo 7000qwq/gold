@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gold Investment Simulator</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #F9E4B7; /* 浅金色背景 */
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin: 40px auto;
+      width: 80%;
+      max-width: 1200px;
+    }
+    /* 左侧表单区域 */
+    .form-section {
+      flex: 1;
+      margin-right: 20px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .form-section h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .compute-btn {
+      padding: 10px 20px;
+      background-color: #FFC107; /* 按钮颜色 */
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .compute-btn:hover {
+      background-color: #ffb300;
+    }
+    /* 右侧结果展示区域 */
+    .result-section {
+      flex: 0.5;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .result-section h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+    .income-display {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 左侧输入表单 -->
+  <div class="form-section">
+    <h2>Transaction Parameters</h2>
+    <form id="simulationForm">
+      <div class="form-group">
+        <label for="startTime">Start Time</label>
+        <!-- datetime-local 可选择到分钟级别 -->
+        <input type="datetime-local" id="startTime" name="startTime" required>
+      </div>
+      <div class="form-group">
+        <label for="endTime">End Time</label>
+        <input type="datetime-local" id="endTime" name="endTime" required>
+      </div>
+      <div class="form-group">
+        <label for="amount">Amount (¥)</label>
+        <input type="number" step="0.01" id="amount" name="amount" required>
+      </div>
+      <div class="form-group">
+        <label for="singleAmount">Single Amount (¥)</label>
+        <input type="number" step="0.01" id="singleAmount" name="singleAmount" required>
+      </div>
+      <div class="form-group">
+        <label for="difference">Difference (¥)</label>
+        <input type="number" step="0.01" id="difference" name="difference" required>
+      </div>
+      <div class="form-group">
+        <label for="commission">Commission (%)</label>
+        <input type="number" step="0.01" id="commission" name="commission" required>
+      </div>
+      <div class="button-container">
+        <button type="button" class="compute-btn" id="computeBtn">Compute</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 右侧结果展示 -->
+  <div class="result-section">
+    <h2>Result</h2>
+    <div class="income-display">
+      Income: <span id="incomeValue">-</span> ¥
+    </div>
+  </div>
+</div>
+
+<script>
+  // 点击Compute按钮，向后端发起计算请求并下载文件
+  document.getElementById('computeBtn').addEventListener('click', function() {
+    // 1. 获取表单数据
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const amount = document.getElementById('amount').value;
+    const singleAmount = document.getElementById('singleAmount').value;
+    const difference = document.getElementById('difference').value;
+    const commission = document.getElementById('commission').value;
+
+    // 2. 构造请求体
+    const requestData = {
+      startTime: startTime,
+      endTime: endTime,
+      amount: parseFloat(amount),
+      singleAmount: parseFloat(singleAmount),
+      difference: parseFloat(difference),
+      commission: parseFloat(commission)
+    };
+
+    // 3. 发起POST请求给后端 /computeAndDownload (示例URL)
+    fetch('http://127.0.0.1:5000/computeAndDownload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+      .then(response => response.json())
+      .then(data => {
+        // 假设后端返回形如 { "income": 1234.56, "downloadUrl": "/downloadHistory?token=xxxx" }
+        // 1) 显示收益
+        document.getElementById('incomeValue').textContent = data.income.toFixed(2);
+
+        // 2) 自动触发下载交易记录
+        //    如果后端直接返回 downloadUrl，可直接跳转该地址
+        if (data.downloadUrl) {
+          window.location.href = data.downloadUrl;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Compute failed!');
+      });
+  });
+</script>
+
+</body>
+</html>

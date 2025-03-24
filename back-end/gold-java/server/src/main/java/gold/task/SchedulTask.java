@@ -68,16 +68,34 @@ public class SchedulTask {
         // waydroid
         // BigDecimal bigDecimalData = goldPriceService.getCurrentGoldPrice();
 
+        // 从 strategy 的 note 中取出设置的价格差
+        String priceStr = (String) redisTemplate.opsForHash().get(1, "note");
+        BigDecimal priceDifference = new BigDecimal(priceStr);
+ 
         List<Transaction> matchingBuyRecords = transactionMapper.findMatchingRecords(price);
-        if (matchingBuyRecords.isEmpty()) {
+        List<Transaction> matchingSellRecords = transactionMapper.findMatchingRecords(price.subtract(priceDifference));
+        if (matchingBuyRecords.isEmpty() && matchingSellRecords.isEmpty()) {
+            // 没有 x，也没有 x - 6，买入 x
             // 没有价格在xxx的持仓，当前金价为xxx.xx，请买入
             emailUtil.sendBuyMail("2805603902@qq.com", price);
-        }
+        } else if (!matchingBuyRecords.isEmpty() && matchingSellRecords.isEmpty()) {
+            // 有 x，没有 x - 6，不操作
+        } else if (matchingBuyRecords.isEmpty() && !matchingSellRecords.isEmpty()) {
+            // 没有 x，有 x - 6，记账
+            for (Transaction transaction : matchingSellRecords) {
 
-        List<Transaction> matchingSellRecords = transactionMapper.findMatchingRecords(price.subtract(BigDecimal.valueOf(6)));
-        for (Transaction transaction : matchingSellRecords) {
-            // 有价格为xxx.xx的持仓x.xxxx克，当前金价为xxx.xx，请卖出
-            emailUtil.sendSellMail("2805603902@qq.com", price, transaction.getGoldPrice(), transaction.getWeight());
+                transactionMapper.markSoldAndBuy(transaction.getId());
+                Transaction sellOld = new Transaction(null, Long.valueOf(1), LocalDateTime.now(), 1, price, transaction.getWeight().multiply(price) , transaction.getWeight(), BigDecimal.valueOf(0), "");
+                transactionMapper.insert(sellOld);
+                Transaction buyNew = new Transaction(null, Long.valueOf(1), LocalDateTime.now(), 0, price, transaction.getWeight().multiply(price) , transaction.getWeight(), BigDecimal.valueOf(0), "");
+                transactionMapper.insert(buyNew);
+            }
+        }else {
+            // 有 x，有 x - 6，卖出 x - 6
+            for (Transaction transaction : matchingSellRecords) {
+                // 有价格为xxx.xx的持仓x.xxxx克，当前金价为xxx.xx，请卖出
+                emailUtil.sendSellMail("2805603902@qq.com", price, transaction.getGoldPrice(), transaction.getWeight());
+            }
         }
 
     }
